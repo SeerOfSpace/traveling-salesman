@@ -33,6 +33,12 @@ public class Graph<IdType, WeightType> {
 		n2.addEdge(new Edge<>(n1, weight));
 	}
 	
+	public void addEdgeDirected(Node<IdType, WeightType> n1, Node<IdType, WeightType> n2, WeightType weight) {
+		map.putIfAbsent(n1.getId(), n1);
+		map.putIfAbsent(n2.getId(), n2);
+		n1.addEdge(new Edge<IdType, WeightType>(n2, weight));
+	}
+	
 	public void addEdgeDirected(IdType id1, IdType id2, WeightType weight) {
 		Node<IdType, WeightType> n1 = map.get(id1);
 		Node<IdType, WeightType> n2 = map.get(id2);
