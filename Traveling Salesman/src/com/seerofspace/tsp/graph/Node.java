@@ -1,4 +1,4 @@
-package com.seerofspace.tsp.core;
+package com.seerofspace.tsp.graph;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,8 +27,12 @@ public class Node<IdType, WeightType> {
 		return adjacentMap.get(id);
 	}
 	
-	public Iterator<Edge<IdType, WeightType>> getIterator() {
+	public Iterator<Edge<IdType, WeightType>> getAdjacentIterator() {
 		return Collections.unmodifiableCollection(adjacentMap.values()).iterator();
+	}
+	
+	public int getAdjacentSize() {
+		return adjacentMap.size();
 	}
 	
 	public IdType getId() {

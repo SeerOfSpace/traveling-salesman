@@ -1,6 +1,6 @@
-package com.seerofspace.tsp.core;
+package com.seerofspace.tsp.graph;
 
-public class Edge<IdType ,WeightType> {
+public class Edge<IdType, WeightType> {
 	
 	private WeightType weight;
 	private Node<IdType, WeightType> destination;

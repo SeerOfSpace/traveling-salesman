@@ -1,6 +1,10 @@
-package com.seerofspace.tsp.core;
+package com.seerofspace.tsp.graph;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 public class Graph<IdType, WeightType> {
@@ -57,8 +61,33 @@ public class Graph<IdType, WeightType> {
 		return map.get(id);
 	}
 	
+	public boolean containsNode(Node<IdType, WeightType> node) {
+		Node<IdType, WeightType> temp = map.get(node.getId());
+		if(temp == node) {
+			return true;
+		}
+		return false;
+	}
+	
 	public boolean containsNode(IdType id) {
 		return map.containsKey(id);
+	}
+	
+	public Iterator<Node<IdType, WeightType>> getIterator() {
+		return Collections.unmodifiableCollection(map.values()).iterator();
+	}
+	
+	public List<Node<IdType, WeightType>> toList() {
+		List<Node<IdType, WeightType>> list = new ArrayList<>(map.size());
+		Iterator<Node<IdType, WeightType>> iterator = getIterator();
+		while(iterator.hasNext()) {
+			list.add(iterator.next());
+		}
+		return list;
+	}
+	
+	public int getSize() {
+		return map.size();
 	}
 	
 }
