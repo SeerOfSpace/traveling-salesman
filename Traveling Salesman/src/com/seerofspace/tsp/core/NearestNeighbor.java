@@ -30,7 +30,7 @@ public class NearestNeighbor {
 				throw new RuntimeException("Node has no edges");
 			}
 			if(isOnlyCircular(currentNode)) {
-				throw new RuntimeException("Only edge is circular");
+				throw new RuntimeException("All edges are circular");
 			}
 			Iterator<Edge<IdType, WeightType>> iterator = currentNode.getAdjacentIterator();
 			Edge<IdType, WeightType> lowest = null;
