@@ -10,9 +10,14 @@ public class Node<IdType, WeightType> {
 	private IdType id;
 	private Map<IdType, Edge<IdType, WeightType>> adjacentMap;
 	
-	public Node(IdType value) {
-		this.id = value;
+	public Node(IdType id) {
+		this.id = id;
 		adjacentMap = new HashMap<>();
+	}
+	
+	protected Node(Node<IdType, WeightType> node) {
+		id = node.getId();
+		adjacentMap = node.adjacentMap;
 	}
 	
 	protected void addEdge(Edge<IdType, WeightType> edge) {

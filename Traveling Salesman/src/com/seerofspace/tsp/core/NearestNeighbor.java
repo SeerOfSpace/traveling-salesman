@@ -81,21 +81,19 @@ public class NearestNeighbor {
 				}
 			}
 		}
+		if(lowest == null) {
+			return null;
+		}
 		return lowest.getDestination();
 	}
 	
-	private static class BacktraceNode<IdType, WeightType> {
-		
-		private Node<IdType, WeightType> node;
+	private static class BacktraceNode<IdType, WeightType> extends Node<IdType, WeightType> {
+
 		private BacktraceNode<IdType, WeightType> parent;
 		
-		public BacktraceNode(Node<IdType, WeightType> node, BacktraceNode<IdType, WeightType> parent) {
-			this.node = node;
+		protected BacktraceNode(Node<IdType, WeightType> node, BacktraceNode<IdType, WeightType> parent) {
+			super(node);
 			this.parent = parent;
-		}
-		
-		public Node<IdType, WeightType> getNode() {
-			return node;
 		}
 		
 		public BacktraceNode<IdType, WeightType> getParent() {
@@ -121,18 +119,18 @@ public class NearestNeighbor {
 		while(!queue.isEmpty()) {
 			BacktraceNode<IdType, WeightType> nextNode = queue.poll();
 			
-			if(!visitedNodes.containsKey(nextNode.getNode().getId())) {
+			if(!visitedNodes.containsKey(nextNode.getId())) {
 				List<Node<IdType, WeightType>> path = new ArrayList<>();
 				do {
-					path.add(nextNode.getNode());
+					path.add(nextNode);
 					nextNode = nextNode.getParent();
 				} while(nextNode != null);
 				Collections.reverse(path);
 				return path;
 			}
 			
-			if(nextNode.getNode().getAdjacentSize() != 0) {
-				list = getOrderedAdjacentList(nextNode.getNode());
+			if(nextNode.getAdjacentSize() != 0) {
+				list = getOrderedAdjacentList(nextNode);
 				for(Node<IdType, WeightType> e : list) {
 					if(!visitedNodesQueue.containsKey(e.getId())) { 
 						queue.add(new BacktraceNode<IdType, WeightType>(e, nextNode));
