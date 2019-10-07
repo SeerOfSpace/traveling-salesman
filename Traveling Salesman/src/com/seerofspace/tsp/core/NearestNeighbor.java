@@ -1,6 +1,7 @@
 package com.seerofspace.tsp.core;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -34,45 +35,19 @@ public class NearestNeighbor {
 			if(isOnlyCircular(currentNode)) {
 				throw new RuntimeException("All edges are circular");
 			}
-			
-			/*
-			Iterator<Edge<IdType, WeightType>> iterator = currentNode.getAdjacentIterator();
-			Edge<IdType, WeightType> lowest = null;
-			Edge<IdType, WeightType> lowestVisited = null;
-			
-			while(iterator.hasNext()) {
-				Edge<IdType, WeightType> temp = iterator.next();
-				if(temp.getDestination() == currentNode) {
-					continue;
-				}
-				if(visitedNodes.containsKey(temp.getDestination().getId())) {
-					if(lowestVisited == null) {
-						lowestVisited = temp;
-					} else if(temp.getWeight().compareTo(lowestVisited.getWeight()) < 0) {
-						lowestVisited = temp;
-					}
-				} else {
-					if(lowest == null) {
-						lowest = temp;
-					} else if(temp.getWeight().compareTo(lowest.getWeight()) < 0) {
-						lowest = temp;
-					}
-				}
-			}
-			
-			Node<IdType, WeightType> result;
-			if(lowest == null) { 
-				result = lowestVisited.getDestination();
+			Node<IdType, WeightType> temp = findNextPathShallow(currentNode, visitedNodes);
+			if(temp == null) {
+				route.addAll(findNextPathDeep(currentNode, visitedNodes));
+				temp = route.get(route.size() - 1);
 			} else {
-				result = lowest.getDestination();
+				route.add(temp);
 			}
-			route.add(result);
-			visitedNodes.putIfAbsent(result.getId(), result);
-			currentNode = result;
-			*/
+			visitedNodes.put(temp.getId(), temp);
+			currentNode = temp;
 		}
 		
-		route.add(startingNode);
+		visitedNodes.remove(startingNode.getId());
+		route.addAll(findNextPathDeep(currentNode, visitedNodes));
 		return route;
 	}
 	
@@ -133,18 +108,18 @@ public class NearestNeighbor {
 			Node<IdType, WeightType> currentNode, 
 			Map<IdType, Node<IdType, WeightType>> visitedNodes) {
 		
+		Map<IdType, Node<IdType, WeightType>> visitedNodesQueue = new HashMap<>();
+		visitedNodesQueue.put(currentNode.getId(), currentNode);
+		
 		Queue<BacktraceNode<IdType, WeightType>> queue = new LinkedList<>();
 		List<Node<IdType, WeightType>> list = getOrderedAdjacentList(currentNode);
 		list.forEach(e -> {
 			queue.add(new BacktraceNode<IdType, WeightType>(e, null));
+			visitedNodesQueue.put(e.getId(), e);
 		});
-		
-		Map<IdType, Node<IdType, WeightType>> visitedNodesQueue = new HashMap<>();
-		visitedNodesQueue.put(currentNode.getId(), currentNode);
 		
 		while(!queue.isEmpty()) {
 			BacktraceNode<IdType, WeightType> nextNode = queue.poll();
-			visitedNodesQueue.putIfAbsent(nextNode.getNode().getId(), nextNode.getNode());
 			
 			if(!visitedNodes.containsKey(nextNode.getNode().getId())) {
 				List<Node<IdType, WeightType>> path = new ArrayList<>();
@@ -152,14 +127,16 @@ public class NearestNeighbor {
 					path.add(nextNode.getNode());
 					nextNode = nextNode.getParent();
 				} while(nextNode != null);
+				Collections.reverse(path);
 				return path;
 			}
 			
 			if(nextNode.getNode().getAdjacentSize() != 0) {
 				list = getOrderedAdjacentList(nextNode.getNode());
 				for(Node<IdType, WeightType> e : list) {
-					if(!visitedNodesQueue.containsKey(e.getId())) { //ASDFASDFASDFASDFASDFASDF
+					if(!visitedNodesQueue.containsKey(e.getId())) { 
 						queue.add(new BacktraceNode<IdType, WeightType>(e, nextNode));
+						visitedNodesQueue.put(e.getId(), e);
 					}
 				}
 			}
