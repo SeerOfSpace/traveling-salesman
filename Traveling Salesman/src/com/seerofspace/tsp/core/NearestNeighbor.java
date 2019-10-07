@@ -143,7 +143,6 @@ public class NearestNeighbor {
 		visitedNodesQueue.put(currentNode.getId(), currentNode);
 		
 		while(!queue.isEmpty()) {
-			
 			BacktraceNode<IdType, WeightType> nextNode = queue.poll();
 			visitedNodesQueue.putIfAbsent(nextNode.getNode().getId(), nextNode.getNode());
 			
@@ -159,7 +158,7 @@ public class NearestNeighbor {
 			if(nextNode.getNode().getAdjacentSize() != 0) {
 				list = getOrderedAdjacentList(nextNode.getNode());
 				for(Node<IdType, WeightType> e : list) {
-					if(!visitedNodesQueue.containsKey(e.getId())) {
+					if(!visitedNodesQueue.containsKey(e.getId())) { //ASDFASDFASDFASDFASDFASDF
 						queue.add(new BacktraceNode<IdType, WeightType>(e, nextNode));
 					}
 				}
