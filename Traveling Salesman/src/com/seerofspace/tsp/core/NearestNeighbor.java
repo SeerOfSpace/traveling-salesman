@@ -73,7 +73,7 @@ public class NearestNeighbor {
 			if(temp.getDestination() == currentNode) {
 				continue;
 			}
-			if(visitedNodes.containsKey(temp.getDestination().getId())) {
+			if(!visitedNodes.containsKey(temp.getDestination().getId())) {
 				if(lowest == null) {
 					lowest = temp;
 				} else if(temp.getWeight().compareTo(lowest.getWeight()) < 0) {
