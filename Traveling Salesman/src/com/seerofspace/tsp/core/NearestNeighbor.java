@@ -62,7 +62,7 @@ public class NearestNeighbor {
 		return true;
 	}
 	
-	public static <IdType, WeightType extends Comparable<WeightType>> Node<IdType, WeightType> findNextPathShallow(
+	private static <IdType, WeightType extends Comparable<WeightType>> Node<IdType, WeightType> findNextPathShallow(
 			Node<IdType, WeightType> currentNode, 
 			Map<IdType, Node<IdType, WeightType>> visitedNodes) {
 		
@@ -102,7 +102,7 @@ public class NearestNeighbor {
 		
 	}
 	
-	public static <IdType, WeightType extends Comparable<WeightType>> List<Node<IdType, WeightType>> findNextPathDeep(
+	private static <IdType, WeightType extends Comparable<WeightType>> List<Node<IdType, WeightType>> findNextPathDeep(
 			Node<IdType, WeightType> currentNode, 
 			Map<IdType, Node<IdType, WeightType>> visitedNodes) {
 		
