@@ -74,9 +74,7 @@ public class NearestNeighbor {
 				continue;
 			}
 			if(!visitedNodes.containsKey(temp.getDestination().getId())) {
-				if(lowest == null) {
-					lowest = temp;
-				} else if(temp.getWeight().compareTo(lowest.getWeight()) < 0) {
+				if(lowest == null || temp.getWeight().compareTo(lowest.getWeight()) < 0) {
 					lowest = temp;
 				}
 			}
