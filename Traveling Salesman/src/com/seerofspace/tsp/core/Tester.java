@@ -20,6 +20,8 @@ public class Tester {
 		route.forEach(e -> {
 			System.out.println(e.getId());
 		});
+		System.out.println();
+		System.out.println(getRouteLength(route));
 	}
 	
 	public static <IdType, WeightType> void printGraph(Graph<IdType, WeightType> graph) {
@@ -55,6 +57,14 @@ public class Tester {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public static int getRouteLength(List<Node<String, Integer>> route) {
+		int length = 0;
+		for(int i = 0; i < route.size() - 1; i++) {
+			length += route.get(i).getEdge(route.get(i + 1).getId()).getWeight();
+		}
+		return length;
 	}
 	
 }

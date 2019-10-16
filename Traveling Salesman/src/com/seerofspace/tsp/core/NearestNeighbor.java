@@ -27,39 +27,34 @@ public class NearestNeighbor {
 		route.add(startingNode);
 		visitedNodes.put(startingNode.getId(), startingNode);
 		Node<IdType, WeightType> currentNode = startingNode;
+		boolean looped = false;
 		
 		while(visitedNodes.size() != graph.getSize()) {
 			if(currentNode.getAdjacentSize() == 0) {
 				throw new RuntimeException("Node has no edges");
 			}
-			if(isOnlyCircular(currentNode)) {
-				throw new RuntimeException("All edges are circular");
-			}
-			Node<IdType, WeightType> temp = findNextPathShallow(currentNode, visitedNodes);
-			if(temp == null) {
-				route.addAll(findNextPathDeep(currentNode, visitedNodes));
-				temp = route.get(route.size() - 1);
+			
+			Node<IdType, WeightType> nextNode = findNextPathShallow(currentNode, visitedNodes);
+			if(nextNode == null) {
+				List<Node<IdType, WeightType>> pathList = findNextPathDeep(currentNode, visitedNodes);
+				if(pathList == null) {
+					throw new RuntimeException("Path cannot be found");
+				}
+				route.addAll(pathList);
+				nextNode = pathList.get(pathList.size() - 1);
 			} else {
-				route.add(temp);
+				route.add(nextNode);
 			}
-			visitedNodes.put(temp.getId(), temp);
-			currentNode = temp;
+			visitedNodes.put(nextNode.getId(), nextNode);
+			currentNode = nextNode;
+			
+			if(visitedNodes.size() == graph.getSize() && !looped) {
+				visitedNodes.remove(startingNode.getId());
+				looped = true;
+			}
 		}
 		
-		visitedNodes.remove(startingNode.getId());
-		route.addAll(findNextPathDeep(currentNode, visitedNodes));
 		return route;
-	}
-	
-	private static <IdType, WeightType> boolean isOnlyCircular(Node<IdType, WeightType> node) {
-		Iterator<Edge<IdType, WeightType>> iterator = node.getAdjacentIterator();
-		while(iterator.hasNext()) {
-			Edge<IdType, WeightType> edge = iterator.next();
-			if(edge.getDestination() != node) {
-				return false;
-			}
-		}
-		return true;
 	}
 	
 	private static <IdType, WeightType extends Comparable<WeightType>> Node<IdType, WeightType> findNextPathShallow(
@@ -69,13 +64,13 @@ public class NearestNeighbor {
 		Iterator<Edge<IdType, WeightType>> iterator = currentNode.getAdjacentIterator();
 		Edge<IdType, WeightType> lowest = null;
 		while(iterator.hasNext()) {
-			Edge<IdType, WeightType> temp = iterator.next();
-			if(temp.getDestination() == currentNode) {
+			Edge<IdType, WeightType> nextEdge = iterator.next();
+			if(nextEdge.getDestination() == currentNode) {
 				continue;
 			}
-			if(!visitedNodes.containsKey(temp.getDestination().getId())) {
-				if(lowest == null || temp.getWeight().compareTo(lowest.getWeight()) < 0) {
-					lowest = temp;
+			if(!visitedNodes.containsKey(nextEdge.getDestination().getId())) {
+				if(lowest == null || nextEdge.getWeight().compareTo(lowest.getWeight()) < 0) {
+					lowest = nextEdge;
 				}
 			}
 		}
