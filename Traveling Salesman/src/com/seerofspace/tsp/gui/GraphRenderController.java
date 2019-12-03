@@ -1,9 +1,13 @@
 package com.seerofspace.tsp.gui;
 
 import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
+import javafx.scene.control.Spinner;
 import javafx.scene.control.SplitPane;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
@@ -16,6 +20,10 @@ public class GraphRenderController {
 	@FXML BorderPane root;
 	@FXML SplitPane splitPane;
 	private Stage stage;
+	@FXML Slider slider1;
+	@FXML Slider slider2;
+	@FXML Label label1;
+	@FXML Label label2;
 	
 	@FXML
 	private void initialize() {
@@ -51,7 +59,14 @@ public class GraphRenderController {
 			}
 		}).start();
 		*/
+		
 		WorkThread wt = new WorkThread(canvasPane.canvas);
+		slider1.valueProperty().bindBidirectional(wt.radius);
+		slider2.valueProperty().bindBidirectional(wt.percent);
+		label1.textProperty().bind(slider1.valueProperty().asString("%.3f"));
+		label2.textProperty().bind(slider2.valueProperty().asString("%.3f"));
+		//slider1.setValue(100);
+		//slider2.setValue(0.005);
 		wt.start();
 	}
 	

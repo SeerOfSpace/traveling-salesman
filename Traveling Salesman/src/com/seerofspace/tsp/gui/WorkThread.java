@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
@@ -20,12 +22,15 @@ public class WorkThread {
 	private static Object lock;
 	private MyCircle attractor;
 	
+	public DoubleProperty radius = new SimpleDoubleProperty();
+	public DoubleProperty percent = new SimpleDoubleProperty();
+	
 	private static final double RADIUS = 100;
 	private static final double PERCENT = 0.005;
 	private static final int SLEEP = 0;
 	private static final double GRID_SPACING = 20;
 	private static final int GRID_COLUMNS = 85;
-	private static final int AMOUNT = 1000;
+	private static final int AMOUNT = 2000;
 	
 	public WorkThread(Canvas canvas) {
 		this.canvas = canvas;
@@ -71,11 +76,13 @@ public class WorkThread {
 				Thread.sleep(2000);
 				double inactiveCount = 0;
 				while(!stop) {
+					double radius = this.radius.get();
+					double percent = this.percent.get();
 					for(MyCircle c1 : circleList) {
 						if(c1 != activeCircle) {
 							for(MyCircle c2 : circleList) {
 								if(c2 != c1) {
-									if(orbit(c1, c2, RADIUS, PERCENT, 0)) {
+									if(orbit(c1, c2, radius, percent, 0)) {
 										inactiveCount = 0;
 									} else {
 										inactiveCount++;
@@ -94,7 +101,7 @@ public class WorkThread {
 					} else {
 						synchronized(lock) {
 							System.out.println("waiting");
-							lock.wait();
+							//lock.wait();
 							System.out.println("waiting done");
 							inactiveCount = 0;
 						}
@@ -112,7 +119,7 @@ public class WorkThread {
 		for(int i = 0; i < Math.ceil(AMOUNT / (double) GRID_COLUMNS); i++) {
 			int num;
 			for(int j = 0; j < GRID_COLUMNS && (num = i * GRID_COLUMNS + j) < AMOUNT; j++) {
-				Color color = Color.hsb(360 / (double) AMOUNT * num, 1, 1, 0.5);
+				Color color = Color.hsb(360 / (double) AMOUNT * num, 1, 1, 0.25);
 				MyCircle circle = new MyCircle((j + 1) * GRID_SPACING, (i + 1) * GRID_SPACING, 10, color);
 				circleList.add(circle);
 			}
@@ -191,20 +198,6 @@ public class WorkThread {
 		c1.setVectorX(c1.getVectorX() + -amounts[1]);
 		c1.setVectorY(c1.getVectorY() + amounts[0]);
 		return true;
-	}
-	
-	private static void func2(MyCircle c1, MyCircle c2, double radius, double percent) {
-		double x = c2.getX() - c1.getX();
-		double y = c2.getY() - c1.getY();
-		double distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-		if(distance >= radius) {
-			return;
-		}
-		double amount = (radius - distance) * percent + 0.01;
-		double amountX = x/distance * amount;
-		double amountY = y/distance * amount;
-		c2.setX(c2.getX() + -amountY);
-		c2.setY(c2.getY() + amountX);
 	}
 	
 	public static void stop() {
