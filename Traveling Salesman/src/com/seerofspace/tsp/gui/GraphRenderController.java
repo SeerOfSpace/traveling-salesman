@@ -1,55 +1,67 @@
 package com.seerofspace.tsp.gui;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.SplitPane;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.stage.Stage;
 
 public class GraphRenderController {
 	
 	@FXML BorderPane root;
+	@FXML SplitPane splitPane;
+	private Stage stage;
 	
 	@FXML
 	private void initialize() {
-		CanvasPane canvasPane = new CanvasPane(600.0, 400.0);
-		canvasPane.widthProperty();
-		//canvasPane.setStyle("-fx-background-color: white");
-		//root.setCenter(canvasPane);
-		Pane pane = (Pane) root.getCenter();
+		CanvasPane canvasPane = new CanvasPane();
+		canvasPane.setStyle("-fx-background-color: white");
+		AnchorPane pane = (AnchorPane) splitPane.getItems().get(0);
 		pane.getChildren().add(canvasPane);
+		AnchorPane.setBottomAnchor(canvasPane, 0.0);
+		AnchorPane.setLeftAnchor(canvasPane, 0.0);
+		AnchorPane.setRightAnchor(canvasPane, 0.0);
+		AnchorPane.setTopAnchor(canvasPane, 0.0);
 		GraphicsContext gc = canvasPane.getGraphicsContext();
-		gc.setFill(Color.RED);
-		gc.fillRect(0, 0, canvasPane.getWidth(), canvasPane.getHeight());
-		root.widthProperty().addListener(e -> {
-			canvasPane.setMinWidth(root.getWidth());
-			canvasPane.setMaxWidth(root.getWidth());
-			System.out.println(canvasPane.getWidth());
-			gc.fillRect(0, 0, canvasPane.getWidth(), canvasPane.getHeight());
+		//gc.setFill(Color.RED);
+		Platform.runLater(() -> {
+			//gc.fillRect(0, 0, canvasPane.getWidth(), canvasPane.getHeight());
 		});
-		root.heightProperty().addListener(e -> {
-			canvasPane.setMinHeight(root.getHeight());
-			canvasPane.setMaxHeight(root.getHeight());
-			System.out.println(canvasPane.getHeight());
-			gc.fillRect(0, 0, canvasPane.getWidth(), canvasPane.getHeight());
+		canvasPane.widthProperty().addListener(e -> {
+			//gc.fillRect(0, 0, canvasPane.getWidth(), canvasPane.getHeight());
 		});
+		canvasPane.heightProperty().addListener(e -> {
+			//gc.fillRect(0, 0, canvasPane.getWidth(), canvasPane.getHeight());
+		});
+		/*
+		new Thread(() -> {
+			while(true) {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				System.out.println(canvasPane.getWidth());
+			}
+		}).start();
+		*/
+		WorkThread wt = new WorkThread(canvasPane.canvas);
+		wt.start();
 	}
 	
 	private static class CanvasPane extends Pane {
 
 	    final Canvas canvas;
 
-	    CanvasPane(Double width, Double height) {
-	    	this.setWidth(width);
-	    	this.setHeight(height);
-	    	//this.setPrefWidth(USE_COMPUTED_SIZE);
-	    	//this.setPrefHeight(USE_COMPUTED_SIZE);
-	    	//this.setMinWidth(1);
-	    	//this.setMinHeight(1);
-	        canvas = new Canvas(width, height);
+	    CanvasPane() {
+	        canvas = new Canvas();
 	        getChildren().add(canvas);
-	        
 	        canvas.widthProperty().bind(this.widthProperty());
 	        canvas.heightProperty().bind(this.heightProperty());
 	    }
@@ -60,38 +72,8 @@ public class GraphRenderController {
 	    
 	}
 	
-	public class ResizableCanvas extends Canvas {
-
-	    @Override
-	    public boolean isResizable() {
-	        return true;
-	    }
-
-	    @Override
-	    public double maxHeight(double width) {
-	        return Double.POSITIVE_INFINITY;
-	    }
-
-	    @Override
-	    public double maxWidth(double height) {
-	        return Double.POSITIVE_INFINITY;
-	    }
-
-	    @Override
-	    public double minWidth(double height) {
-	        return 1D;
-	    }
-
-	    @Override
-	    public double minHeight(double width) {
-	        return 1D;
-	    }
-
-	    @Override
-	    public void resize(double width, double height) {
-	        this.setWidth(width);
-	        this.setHeight(height);
-	    }
+	public void setStage(Stage stage) {
+		this.stage = stage;
 	}
 	
 }
