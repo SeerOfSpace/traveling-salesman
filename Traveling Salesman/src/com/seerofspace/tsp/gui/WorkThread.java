@@ -22,6 +22,7 @@ public class WorkThread {
 	private Thread thread;
 	private static Object lock;
 	private MyCircle attractor;
+	private Point2D.Double calcTemp;
 	
 	public DoubleProperty radius = new SimpleDoubleProperty();
 	public DoubleProperty percent = new SimpleDoubleProperty();
@@ -39,6 +40,7 @@ public class WorkThread {
 		stop = false;
 		lock = new Object();
 		attractor = null;
+		calcTemp = new Point2D.Double();
 		setup();
 		testStuff();
 	}
@@ -168,7 +170,8 @@ public class WorkThread {
 		double amount = (forceRadius - distance) * percent + 0.01;
 		double amountX = deltaX/distance * amount;
 		double amountY = deltaY/distance * amount;
-		return new Point2D.Double(amountX, amountY);
+		calcTemp.setLocation(amountX, amountY);
+		return calcTemp;
 	}
 	
 	private boolean repel(MyCircle c1, MyCircle c2, double forceRadius, double percent, double innerRadius) {
@@ -201,8 +204,15 @@ public class WorkThread {
 		return true;
 	}
 	
-	public void calcEdgeLabelPosition(double distance) {
+	public Point2D.Double calcEdgeLabelPosition(MyCircle c1, MyCircle c2, double distance) {
+		double deltaX = c1.getX() - c2.getX();
+		double deltaY = c1.getY() - c2.getY();
+		double centerX = deltaX / 2 + c2.getX();
+		double centerY = deltaY / 2 + c2.getY();
+		double perpendicularSlope = -deltaX / deltaY;
+		double height = centerY - centerX * perpendicularSlope;
 		
+		return null;
 	}
 	
 	public static void stop() {
