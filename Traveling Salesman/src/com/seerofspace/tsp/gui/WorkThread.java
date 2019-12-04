@@ -144,8 +144,8 @@ public class WorkThread {
 	private void draw() {
 		Platform.runLater(() -> {
 			gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-			gc.setFill(Color.BLACK);
-			gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+			//gc.setFill(Color.BLACK);
+			//gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
 			circleList.forEach(circle -> {
 				gc.setFill(circle.getColor());
 				gc.fillOval(circle.getX() - circle.getRadius(), circle.getY() - circle.getRadius(), circle.getRadius() * 2, circle.getRadius() * 2);

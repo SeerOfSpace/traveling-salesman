@@ -20,8 +20,7 @@ public class GraphRender extends Application {
 		primaryStage.setScene(scene);
 		primaryStage.setTitle("Graph Render");
 		primaryStage.show();
-		GraphRenderController controller = (GraphRenderController) loader.getController();
-		controller.setStage(primaryStage);
+		//GraphRenderController controller = (GraphRenderController) loader.getController();
 		primaryStage.setMaximized(true);
 	}
 	
