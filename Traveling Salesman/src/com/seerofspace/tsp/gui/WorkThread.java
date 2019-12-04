@@ -1,5 +1,6 @@
 package com.seerofspace.tsp.gui;
 
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,7 +83,7 @@ public class WorkThread {
 						if(c1 != activeCircle) {
 							for(MyCircle c2 : circleList) {
 								if(c2 != c1) {
-									if(orbit(c1, c2, radius, percent, 0)) {
+									if(orbit(c1, c2, RADIUS, PERCENT, 0)) {
 										inactiveCount = 0;
 									} else {
 										inactiveCount++;
@@ -157,7 +158,7 @@ public class WorkThread {
 		});
 	}
 	
-	private double[] baseCalc(MyCircle c1, MyCircle c2, double forceRadius, double percent, double innerRadius) {
+	private Point2D.Double baseCalc(MyCircle c1, MyCircle c2, double forceRadius, double percent, double innerRadius) {
 		double deltaX = c1.getX() - c2.getX();
 		double deltaY = c1.getY() - c2.getY();
 		double distance = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
@@ -167,37 +168,41 @@ public class WorkThread {
 		double amount = (forceRadius - distance) * percent + 0.01;
 		double amountX = deltaX/distance * amount;
 		double amountY = deltaY/distance * amount;
-		return new double[] {amountX, amountY};
+		return new Point2D.Double(amountX, amountY);
 	}
 	
 	private boolean repel(MyCircle c1, MyCircle c2, double forceRadius, double percent, double innerRadius) {
-		double[] amounts = baseCalc(c1, c2, forceRadius, percent, innerRadius);
-		if(amounts == null) {
+		Point2D.Double point = baseCalc(c1, c2, forceRadius, percent, innerRadius);
+		if(point == null) {
 			return false;
 		}
-		c1.setVectorX(c1.getVectorX() + amounts[0]);
-		c1.setVectorY(c1.getVectorY() + amounts[1]);
+		c1.setVectorX(c1.getVectorX() + point.x);
+		c1.setVectorY(c1.getVectorY() + point.y);
 		return true;
 	}
 	
 	private boolean attract(MyCircle c1, MyCircle c2, double forceRadius, double percent, double innerRadius) {
-		double[] amounts = baseCalc(c1, c2, forceRadius, percent, innerRadius);
-		if(amounts == null) {
+		Point2D.Double point = baseCalc(c1, c2, forceRadius, percent, innerRadius);
+		if(point == null) {
 			return false;
 		}
-		c1.setVectorX(c1.getVectorX() - amounts[0]);
-		c1.setVectorY(c1.getVectorY() - amounts[1]);
+		c1.setVectorX(c1.getVectorX() - point.x);
+		c1.setVectorY(c1.getVectorY() - point.y);
 		return true;
 	}
 	
 	private boolean orbit(MyCircle c1, MyCircle c2, double forceRadius, double percent, double innerRadius) {
-		double[] amounts = baseCalc(c1, c2, forceRadius, percent, innerRadius);
-		if(amounts == null) {
+		Point2D.Double point = baseCalc(c1, c2, forceRadius, percent, innerRadius);
+		if(point == null) {
 			return false;
 		}
-		c1.setVectorX(c1.getVectorX() + -amounts[1]);
-		c1.setVectorY(c1.getVectorY() + amounts[0]);
+		c1.setVectorX(c1.getVectorX() + -point.y);
+		c1.setVectorY(c1.getVectorY() + point.x);
 		return true;
+	}
+	
+	public void calcEdgeLabelPosition(double distance) {
+		
 	}
 	
 	public static void stop() {
