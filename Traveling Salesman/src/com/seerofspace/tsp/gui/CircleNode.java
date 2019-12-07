@@ -1,8 +1,10 @@
 package com.seerofspace.tsp.gui;
 
+import com.seerofspace.tsp.graph.Node;
+
 import javafx.scene.paint.Color;
 
-public class MyCircle implements CircleInterface {
+public class CircleNode extends Node<String, Integer> implements CircleInterface {
 	
 	private double x;
 	private double y;
@@ -11,15 +13,20 @@ public class MyCircle implements CircleInterface {
 	private double radius;
 	private Color color;
 	
-	public MyCircle(double radius) {
-		this(0, 0, radius);
+	public CircleNode(String id) {
+		this(id, 1);
 	}
 	
-	public MyCircle(double x, double y, double radius) {
-		this(x, y, radius, Color.BLACK);
+	public CircleNode(String id, double radius) {
+		this(id, 0, 0, radius);
 	}
 	
-	public MyCircle(double x, double y, double radius, Color color) { 
+	public CircleNode(String id, double x, double y, double radius) {
+		this(id, x, y, radius, Color.BLACK);
+	}
+	
+	public CircleNode(String id, double x, double y, double radius, Color color) {
+		super(id);
 		this.x = x;
 		this.y = y;
 		this.setRadius(radius);

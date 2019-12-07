@@ -45,4 +45,8 @@ public class Node<IdType, WeightType> {
 		return id;
 	}
 	
+	protected void setId(IdType id) {
+		this.id = id;
+	}
+	
 }

@@ -2,11 +2,7 @@ package com.seerofspace.tsp.gui;
 
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-
-import com.seerofspace.tsp.graph.Graph;
 
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
@@ -16,42 +12,37 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 
-public class WorkThread {
+public class WorkThread2 {
 	
-	private Graph<String, Integer, CircleNode, LineEdge> graph;
+	private List<MyCircle> circleList;
 	private Canvas canvas;
 	private GraphicsContext gc;
-	private CircleNode activeCircle;
+	private MyCircle activeCircle = null;
 	private static boolean stop;
 	private Thread thread;
 	private static Object lock;
 	private MyCircle attractor;
+	private Point2D.Double calcTemp;
 	
 	public DoubleProperty radius = new SimpleDoubleProperty();
 	public DoubleProperty percent = new SimpleDoubleProperty();
 	
-	private static final double RADIUS = 200;
+	private static final double RADIUS = 100;
 	private static final double PERCENT = 0.005;
-	private static final int SLEEP = 10;
-	private static final double GRID_SPACING = 30;
+	private static final int SLEEP = 0;
+	private static final double GRID_SPACING = 20;
 	private static final int GRID_COLUMNS = 85;
 	private static final int AMOUNT = 2000;
 	
-	public WorkThread(Canvas canvas, Graph<String, Integer, CircleNode, LineEdge> graph) {
+	public WorkThread2(Canvas canvas) {
 		this.canvas = canvas;
-		this.graph = graph;
 		gc = canvas.getGraphicsContext2D();
 		stop = false;
 		lock = new Object();
-		activeCircle = null;
 		attractor = null;
-		radius = new SimpleDoubleProperty(RADIUS);
-		percent = new SimpleDoubleProperty(PERCENT);
+		calcTemp = new Point2D.Double();
 		setup();
-		Platform.runLater(() -> {
-			setupGrid();
-		});
-		//testStuff();
+		testStuff();
 	}
 	
 	private void setup() {
@@ -87,16 +78,14 @@ public class WorkThread {
 				draw();
 				Thread.sleep(2000);
 				double inactiveCount = 0;
-				Point2D.Double tempStorage = new Point2D.Double();
-				Collection<CircleNode> collection = graph.getCollection();
 				while(!stop) {
 					double radius = this.radius.get();
 					double percent = this.percent.get();
-					for(CircleNode c1 : collection) {
+					for(MyCircle c1 : circleList) {
 						if(c1 != activeCircle) {
-							for(CircleNode c2 : collection) {
+							for(MyCircle c2 : circleList) {
 								if(c2 != c1) {
-									if(repel(c1, c2, radius, percent, 0, tempStorage)) {
+									if(orbit(c1, c2, RADIUS, PERCENT, 0)) {
 										inactiveCount = 0;
 									} else {
 										inactiveCount++;
@@ -104,18 +93,18 @@ public class WorkThread {
 								}
 							}
 							if(attractor != null) {
-								attract(c1, attractor, 1000, 0.01, 100, tempStorage);
+								attract(c1, attractor, 1000, 0.01, 100);
 							}
 							c1.calculate();
 						}
 					}
 					draw();
-					if(inactiveCount < collection.size() * collection.size() + 100 || activeCircle != null || attractor != null) {
+					if(inactiveCount < circleList.size() * circleList.size() + 100 || activeCircle != null) {
 						Thread.sleep(SLEEP);
 					} else {
 						synchronized(lock) {
 							System.out.println("waiting");
-							lock.wait();
+							//lock.wait();
 							System.out.println("waiting done");
 							inactiveCount = 0;
 						}
@@ -124,11 +113,11 @@ public class WorkThread {
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
 			}
+			
 		});
-		
 	}
 	
-	private void testStuff(List<MyCircle> circleList) {
+	private void testStuff() {
 		circleList = new ArrayList<>();
 		for(int i = 0; i < Math.ceil(AMOUNT / (double) GRID_COLUMNS); i++) {
 			int num;
@@ -140,32 +129,14 @@ public class WorkThread {
 		}
 	}
 	
-	private void setupGrid() {
-		Iterator<CircleNode> iterator = graph.getIterator();
-		int size = graph.getSize();
-		int squareSide = (int) Math.ceil(Math.sqrt(size));
-		double centerX = canvas.getWidth() / 2;
-		double centerY = canvas.getHeight() / 2;
-		
-		for(int i = 0; i < squareSide; i++) {
-			double y = ((double) i - (double) squareSide / 2.0) * GRID_SPACING + centerY;
-			for(int j = 0; j < squareSide && iterator.hasNext(); j++) {
-				CircleNode circle = iterator.next();
-				double x = ((double) j - (double) squareSide / 2.0) * GRID_SPACING + centerX;
-				circle.setX(x);
-				circle.setY(y);
-			}
-		}
-	}
-	
 	public void start() {
 		thread.start();
 	}
 	
-	private CircleNode getCircleUnderMouse(MouseEvent e) {
+	private MyCircle getCircleUnderMouse(MouseEvent e) {
 		double x = e.getX();
 		double y = e.getY();
-		for(CircleNode circle : graph.getCollection()) {
+		for(MyCircle circle : circleList) {
 			if(circle.containsPoint(x, y)) {
 				return circle;
 			}
@@ -176,7 +147,9 @@ public class WorkThread {
 	private void draw() {
 		Platform.runLater(() -> {
 			gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-			graph.getCollection().forEach(circle -> {
+			//gc.setFill(Color.BLACK);
+			//gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+			circleList.forEach(circle -> {
 				gc.setFill(circle.getColor());
 				gc.fillOval(circle.getX() - circle.getRadius(), circle.getY() - circle.getRadius(), circle.getRadius() * 2, circle.getRadius() * 2);
 			});
@@ -187,59 +160,51 @@ public class WorkThread {
 		});
 	}
 	
-	private boolean baseCalc(CircleInterface c1, CircleInterface c2, double outerRadius,
-			double percent, double innerRadius, Point2D.Double result) {
-		
+	private Point2D.Double baseCalc(MyCircle c1, MyCircle c2, double forceRadius, double percent, double innerRadius) {
 		double deltaX = c1.getX() - c2.getX();
 		double deltaY = c1.getY() - c2.getY();
 		double distance = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
-		if(distance >= outerRadius || distance < innerRadius) {
-			return false;
+		if(distance >= forceRadius || distance < innerRadius) {
+			return null;
 		}
-		double amount = (outerRadius - distance) * percent + 0.01;
+		double amount = (forceRadius - distance) * percent + 0.01;
 		double amountX = deltaX/distance * amount;
 		double amountY = deltaY/distance * amount;
-		result.setLocation(amountX, amountY);
-		return true;
+		calcTemp.setLocation(amountX, amountY);
+		return calcTemp;
 	}
 	
-	private boolean repel(CircleInterface c1, CircleInterface c2, double outerRadius,
-			double percent, double innerRadius, Point2D.Double tempStorage) {
-		
-		boolean success = baseCalc(c1, c2, outerRadius, percent, innerRadius, tempStorage);
-		if(!success) {
+	private boolean repel(MyCircle c1, MyCircle c2, double forceRadius, double percent, double innerRadius) {
+		Point2D.Double point = baseCalc(c1, c2, forceRadius, percent, innerRadius);
+		if(point == null) {
 			return false;
 		}
-		c1.setVectorX(c1.getVectorX() + tempStorage.x);
-		c1.setVectorY(c1.getVectorY() + tempStorage.y);
+		c1.setVectorX(c1.getVectorX() + point.x);
+		c1.setVectorY(c1.getVectorY() + point.y);
 		return true;
 	}
 	
-	private boolean attract(CircleInterface c1, CircleInterface c2, double outerRadius,
-			double percent, double innerRadius, Point2D.Double tempStorage) {
-		
-		boolean success = baseCalc(c1, c2, outerRadius, percent, innerRadius, tempStorage);
-		if(!success) {
+	private boolean attract(MyCircle c1, MyCircle c2, double forceRadius, double percent, double innerRadius) {
+		Point2D.Double point = baseCalc(c1, c2, forceRadius, percent, innerRadius);
+		if(point == null) {
 			return false;
 		}
-		c1.setVectorX(c1.getVectorX() - tempStorage.x);
-		c1.setVectorY(c1.getVectorY() - tempStorage.y);
+		c1.setVectorX(c1.getVectorX() - point.x);
+		c1.setVectorY(c1.getVectorY() - point.y);
 		return true;
 	}
 	
-	private boolean orbit(CircleInterface c1, CircleInterface c2, double outerRadius,
-			double percent, double innerRadius, Point2D.Double tempStorage) {
-		
-		boolean success = baseCalc(c1, c2, outerRadius, percent, innerRadius, tempStorage);
-		if(!success) {
+	private boolean orbit(MyCircle c1, MyCircle c2, double forceRadius, double percent, double innerRadius) {
+		Point2D.Double point = baseCalc(c1, c2, forceRadius, percent, innerRadius);
+		if(point == null) {
 			return false;
 		}
-		c1.setVectorX(c1.getVectorX() + -tempStorage.y);
-		c1.setVectorY(c1.getVectorY() + tempStorage.x);
+		c1.setVectorX(c1.getVectorX() + -point.y);
+		c1.setVectorY(c1.getVectorY() + point.x);
 		return true;
 	}
 	
-	private void calcPerpendicularPosition(CircleInterface c1, CircleInterface c2, double distance, Point2D.Double result) {
+	private Point2D.Double calcEdgeLabelPosition(MyCircle c1, MyCircle c2, double distance) {
 		double deltaX = c1.getX() - c2.getX();
 		double deltaY = c1.getY() - c2.getY();
 		double centerX = deltaX / 2 + c2.getX();
@@ -248,7 +213,8 @@ public class WorkThread {
 		double height = centerY - centerX * perpendicularSlope;
 		double x = centerX + distance / Math.sqrt(1 + Math.pow(perpendicularSlope, 2));
 		double y = x * perpendicularSlope + height;
-		result.setLocation(x, y);
+		calcTemp.setLocation(x, y);
+		return calcTemp;
 	}
 	
 	public static void stop() {

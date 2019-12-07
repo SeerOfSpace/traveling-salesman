@@ -13,7 +13,10 @@ import com.seerofspace.tsp.graph.Node;
 public class Tester {
 	
 	public static void main(String[] args) {
-		Graph<String, Integer> graph = new Graph<>();
+		
+		Graph<String, Integer, Node<String, Integer>, Edge<String, Integer>> graph = 
+				new Graph<>(new MyNodeFactory<>(), new MyEdgeFactory<>());
+		
 		loadFile(new File("src\\com\\seerofspace\\tsp\\core\\test.txt"), graph);
 		printGraph(graph);
 		List<Node<String, Integer>> route = NearestNeighbor.nearestNeighbor(graph, graph.getNode("Rockville"));
@@ -24,7 +27,9 @@ public class Tester {
 		System.out.println(getRouteLength(route));
 	}
 	
-	public static <IdType, WeightType> void printGraph(Graph<IdType, WeightType> graph) {
+	public static <IdType, WeightType> void printGraph(
+			Graph<IdType, WeightType, Node<IdType, WeightType>, Edge<IdType, WeightType>> graph) {
+		
 		Iterator<Node<IdType, WeightType>> iterator = graph.getIterator();
 		while(iterator.hasNext()) {
 			Node<IdType, WeightType> node = iterator.next();
@@ -38,7 +43,9 @@ public class Tester {
 		}
 	}
 	
-	public static void loadFile(File file, Graph<String, Integer> graph) {
+	public static void loadFile(File file, 
+			Graph<String, Integer, Node<String, Integer>, Edge<String, Integer>> graph) {
+		
 		try {
 			Scanner scanner = new Scanner(file);
 			scanner.useDelimiter(", |\\r\\n");

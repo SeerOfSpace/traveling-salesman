@@ -1,67 +1,84 @@
 package com.seerofspace.tsp.graph;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-public class Graph<IdType, WeightType> {
+public class Graph<IdType, WeightType, 
+NodeType extends Node<IdType, WeightType>, 
+EdgeType extends Edge<IdType, WeightType>> {
 	
-	private Map<IdType, Node<IdType, WeightType>> map;
+	private Map<IdType, NodeType> map;
+	private NodeFactoryInterface<IdType, WeightType, NodeType> nodeFactory;
+	private EdgeFactoryInterface<IdType, WeightType, EdgeType> edgeFactory;
 	
-	public Graph() {
+	public Graph(NodeFactoryInterface<IdType, WeightType, NodeType> nodeFactory, 
+			EdgeFactoryInterface<IdType, WeightType, EdgeType> edgeFactory) {
 		map = new HashMap<>();
+		this.nodeFactory = nodeFactory;
+		this.edgeFactory = edgeFactory;
 	}
 	
-	public void addEdgeUndirected(Node<IdType, WeightType> n1, Node<IdType, WeightType> n2, WeightType weight) {
+	public void addEdgeUndirected(NodeType n1, NodeType n2, WeightType weight) {
 		map.putIfAbsent(n1.getId(), n1);
 		map.putIfAbsent(n2.getId(), n2);
-		n1.addEdge(new Edge<IdType, WeightType>(n2, weight));
-		n2.addEdge(new Edge<IdType, WeightType>(n1, weight));
+		//n1.addEdge(new Edge<IdType, WeightType>(n2, weight));
+		n1.addEdge(edgeFactory.factory(n2, weight));
+		//n2.addEdge(new Edge<IdType, WeightType>(n1, weight));
+		n2.addEdge(edgeFactory.factory(n1, weight));
 	}
 	
 	public void addEdgeUndirected(IdType id1, IdType id2, WeightType weight) {
-		Node<IdType, WeightType> n1 = map.get(id1);
-		Node<IdType, WeightType> n2 = map.get(id2);
+		NodeType n1 = map.get(id1);
+		NodeType n2 = map.get(id2);
 		if(n1 == null) {
-			n1 = new Node<>(id1);
+			//n1 = new Node<>(id1);
+			n1 = nodeFactory.factory(id1);
 			map.put(id1, n1);
 		}
 		if(n2 == null) {
-			n2 = new Node<>(id2);
+			//n2 = new Node<>(id2);
+			n2 = nodeFactory.factory(id2);
 			map.put(id2, n2);
 		}
-		n1.addEdge(new Edge<>(n2, weight));
-		n2.addEdge(new Edge<>(n1, weight));
+		//n1.addEdge(new Edge<>(n2, weight));
+		n1.addEdge(edgeFactory.factory(n2, weight));
+		//n2.addEdge(new Edge<>(n1, weight));
+		n2.addEdge(edgeFactory.factory(n1, weight));
 	}
 	
-	public void addEdgeDirected(Node<IdType, WeightType> n1, Node<IdType, WeightType> n2, WeightType weight) {
+	public void addEdgeDirected(NodeType n1, NodeType n2, WeightType weight) {
 		map.putIfAbsent(n1.getId(), n1);
 		map.putIfAbsent(n2.getId(), n2);
-		n1.addEdge(new Edge<IdType, WeightType>(n2, weight));
+		n1.addEdge(edgeFactory.factory(n2, weight));
 	}
 	
 	public void addEdgeDirected(IdType id1, IdType id2, WeightType weight) {
-		Node<IdType, WeightType> n1 = map.get(id1);
-		Node<IdType, WeightType> n2 = map.get(id2);
+		NodeType n1 = map.get(id1);
+		NodeType n2 = map.get(id2);
 		if(n1 == null) {
-			n1 = new Node<>(id1);
+			//n1 = new Node<>(id1);
+			n1 = nodeFactory.factory(id1);
 			map.put(id1, n1);
 		}
 		if(n2 == null) {
-			n2 = new Node<>(id2);
+			//n2 = new Node<>(id2);
+			n2 = nodeFactory.factory(id2);
 			map.put(id2, n2);
 		}
-		n1.addEdge(new Edge<>(n2, weight));
+		//n1.addEdge(new Edge<>(n2, weight));
+		n1.addEdge(edgeFactory.factory(n2, weight));
 	}
 	
-	public Node<IdType, WeightType> getNode(IdType id) {
+	public NodeType getNode(IdType id) {
 		return map.get(id);
 	}
 	
-	public boolean containsNode(Node<IdType, WeightType> node) {
+	public boolean containsNode(NodeType node) {
 		Node<IdType, WeightType> temp = map.get(node.getId());
 		if(temp == node) {
 			return true;
@@ -73,13 +90,17 @@ public class Graph<IdType, WeightType> {
 		return map.containsKey(id);
 	}
 	
-	public Iterator<Node<IdType, WeightType>> getIterator() {
+	public Iterator<NodeType> getIterator() {
 		return Collections.unmodifiableCollection(map.values()).iterator();
 	}
 	
-	public List<Node<IdType, WeightType>> toList() {
-		List<Node<IdType, WeightType>> list = new ArrayList<>(map.size());
-		Iterator<Node<IdType, WeightType>> iterator = getIterator();
+	public Collection<NodeType> getCollection() {
+		return Collections.unmodifiableCollection(map.values());
+	}
+	
+	public List<NodeType> toList() {
+		List<NodeType> list = new ArrayList<>(map.size());
+		Iterator<NodeType> iterator = getIterator();
 		while(iterator.hasNext()) {
 			list.add(iterator.next());
 		}
