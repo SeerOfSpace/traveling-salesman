@@ -12,6 +12,7 @@ public class CircleNode extends Node<String, Integer> implements CircleInterface
 	private double vectorY;
 	private double radius;
 	private Color color;
+	protected boolean drawn = false;
 	
 	public CircleNode(String id) {
 		this(id, 1);

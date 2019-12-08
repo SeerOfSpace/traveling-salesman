@@ -5,9 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
-import com.seerofspace.tsp.graph.Edge;
 import com.seerofspace.tsp.graph.Graph;
-import com.seerofspace.tsp.graph.Node;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -39,7 +37,7 @@ public class GraphRenderController {
 		//testStuff(canvasPane.getCanvas());
 		
 		Graph<String, Integer, CircleNode, LineEdge> graph;
-		graph = new Graph<>(new CircleNodeFactory(0, 0, 10, Color.BLACK), new LineEdgeFactory(1, Color.BLACK));
+		graph = new Graph<>(new CircleNodeFactory(0, 0, 10, Color.BLACK), new LineEdgeFactory(2, Color.BLACK));
 		/*
 		CircleNode c1 = new CircleNode("A", 10);
 		CircleNode c2 = new CircleNode("B", 10);
@@ -52,6 +50,7 @@ public class GraphRenderController {
 		
 	}
 	
+	@SuppressWarnings("unused")
 	private void testStuff(Canvas canvas) {
 		GraphicsContext gc = canvas.getGraphicsContext2D();
 		double radius = 10;
