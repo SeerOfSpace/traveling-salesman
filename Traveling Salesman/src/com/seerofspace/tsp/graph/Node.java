@@ -16,12 +16,6 @@ public class Node<IdType, WeightType> {
 		adjacentMap = new HashMap<>();
 	}
 	
-	//shallow copy constructor
-	protected Node(Node<IdType, WeightType> node) {
-		id = node.getId();
-		adjacentMap = node.adjacentMap;
-	}
-	
 	protected void addEdge(Edge<IdType, WeightType> edge) {
 		adjacentMap.putIfAbsent(edge.getDestination().getId(), edge);
 	}

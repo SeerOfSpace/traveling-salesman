@@ -33,6 +33,7 @@ public class GraphRenderController {
 	@FXML private AnchorPane anchorPane;
 	@FXML private Button loadButton;
 	@FXML private Button generateButton;
+	@FXML private Button generateCompleteButton;
 	@FXML private Button nearestNeighborButton;
 	@FXML private CheckBox pauseCheckBox;
 	@FXML private VBox sideBar;
@@ -42,6 +43,7 @@ public class GraphRenderController {
 	private List<CircleNode> previousPath;
 	private List<Color> previousColors;
 	private Group statisticsGroup;
+	private Thread animationThread;
 	
 	@FXML
 	private void initialize() {
@@ -68,21 +70,35 @@ public class GraphRenderController {
 		graph = null;
 		previousPath = null;
 		previousColors = new ArrayList<>();
+		animationThread = new Thread();
 		
 		fileChooser = new FileChooser();
 		fileChooser.getExtensionFilters().addAll(new ExtensionFilter("Text File", "*.txt"), new ExtensionFilter("All Files", "*.*"));
 		loadButton.setOnAction(e -> {
+			animationThread.interrupt();
 			clearStatistics();
 			loadButtonFunc();
 		});
 		
 		nearestNeighborButton.setOnAction(e -> {
+			animationThread.interrupt();
+			synchronized(this) {
+				revertLines();
+				wt.draw();
+			}
 			nearestNeighborButtonFunc();
 		});
 		
 		generateButton.setOnAction(e -> {
+			animationThread.interrupt();
 			clearStatistics();
-			generateButtonFunc();
+			generateRandomButtonFunc();
+		});
+		
+		generateCompleteButton.setOnAction(e -> {
+			animationThread.interrupt();
+			clearStatistics();
+			generateRandomCompleteButtonFunc();
 		});
 		
 		pauseCheckBox.setOnAction(e -> {
@@ -109,7 +125,7 @@ public class GraphRenderController {
 		reloadWt();
 	}
 	
-	private synchronized void generateButtonFunc() {
+	private synchronized void generateRandomButtonFunc() {
 		int maxWeight = 100;
 		int maxNodes = 10;
 		graph = new Graph<>(new CircleNodeFactory(0, 0, 10, Color.BLACK), new LineEdgeFactory(2, Color.BLACK));
@@ -125,15 +141,41 @@ public class GraphRenderController {
 				if(i == edges[j]) {
 					continue;
 				}
+				String name1 = mapToName(i);
+				String name2 = mapToName(edges[j]);
+				boolean directed = r.nextBoolean();
 				int weight = r.ints(1, 1, maxWeight).findFirst().getAsInt();
-				graph.addEdgeDirected(mapToName(i), mapToName(edges[j]), weight);
+				if(directed) {
+					int weight2 = r.ints(1, 1, maxWeight).findFirst().getAsInt();
+					graph.addEdgeDirected(name1, name2, weight);
+					graph.addEdgeDirected(name2, name1, weight2);
+				} else {
+					graph.addEdgeUndirected(name1, name2, weight);
+				}
 			}
 		}
-		for(CircleNode circle : graph.getCollection()) {
-			for(Edge<String, Integer> edge : circle.getAdjacentCollection()) {
-				if(edge.getDestination().getEdge(circle.getId()) == null) {
-					int weight = r.ints(1, 1, maxWeight).findFirst().getAsInt();
-					graph.addEdgeDirected((CircleNode) edge.getDestination(), circle, weight);
+		reloadWt();
+	}
+	
+	private synchronized void generateRandomCompleteButtonFunc() {
+		int maxWeight = 100;
+		int maxNodes = 10;
+		graph = new Graph<>(new CircleNodeFactory(0, 0, 10, Color.BLACK), new LineEdgeFactory(2, Color.BLACK));
+		Random r = new Random();
+		int num = r.ints(1, 3, maxNodes + 1).findFirst().getAsInt();
+		for(int i = 0; i < num; i++) {
+			for(int j = 0; j < num; j++) {
+				if(i == j) {
+					continue;
+				}
+				String name1 = mapToName(i);
+				String name2 = mapToName(j);
+				boolean directed = r.nextBoolean();
+				int weight = r.ints(1, 1, maxWeight).findFirst().getAsInt();
+				if(directed) {
+					graph.addEdgeDirected(name1, name2, weight);
+				} else {
+					graph.addEdgeUndirected(name1, name2, weight);
 				}
 			}
 		}
@@ -141,8 +183,6 @@ public class GraphRenderController {
 	}
 	
 	private synchronized void nearestNeighborButtonFunc() {
-		revertLines();
-		wt.draw();
 		if(graph == null || wt.getStartingNode() == null) {
 			return;
 		}
@@ -159,21 +199,30 @@ public class GraphRenderController {
 		previousColors.clear();
 		showStatistics();
 		
-		Thread thread = new Thread(() -> {
+		animationThread = new Thread(() -> {
 			synchronized(this) {
-				for(int i = 0; i < path.size() - 1; i++) {
-					try {
+				List<MyTransition> transitionList = new ArrayList<>();
+				try {
+					for(int i = 0; i < path.size() - 1; i++) {
 						Thread.sleep(500);
-					} catch (InterruptedException e1) {
-						e1.printStackTrace();
+						if(Thread.interrupted()) {
+							throw new InterruptedException();
+						}
+						LineEdge line = (LineEdge) path.get(i).getEdge(path.get(i + 1).getId());
+						previousColors.add(line.getColor());
+						
+						MyTransition transition = new MyTransition(line);
+						transitionList.add(transition);
+						transition.play();
 					}
-					LineEdge line = (LineEdge) path.get(i).getEdge(path.get(i + 1).getId());
-					previousColors.add(line.getColor());
-					new MyTransition(line).play();
+				} catch(InterruptedException e1) {
+					transitionList.forEach(e -> {
+						e.stop();
+					});
 				}
 			}
 		});
-		thread.start();
+		animationThread.start();
 	}
 	
 	private class CanvasPane extends Pane {
@@ -224,7 +273,7 @@ public class GraphRenderController {
 		if(previousPath == null) {
 			return;
 		}
-		for(int i = 0; i < previousPath.size() - 1; i++) {
+		for(int i = 0; i < previousColors.size(); i++) {
 			LineEdge line = (LineEdge) previousPath.get(i).getEdge(previousPath.get(i + 1).getId());
 			line.setColor(previousColors.get(i));
 			line.setThickness(2);

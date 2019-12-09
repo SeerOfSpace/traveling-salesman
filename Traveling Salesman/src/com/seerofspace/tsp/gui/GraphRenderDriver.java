@@ -6,7 +6,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-public class GraphRender extends Application {
+public class GraphRenderDriver extends Application {
 	
 	private GraphRenderController controller;
 	

@@ -26,9 +26,7 @@ EdgeType extends Edge<IdType, WeightType>> {
 	public void addEdgeUndirected(NodeType n1, NodeType n2, WeightType weight) {
 		map.putIfAbsent(n1.getId(), n1);
 		map.putIfAbsent(n2.getId(), n2);
-		//n1.addEdge(new Edge<IdType, WeightType>(n2, weight));
 		n1.addEdge(edgeFactory.factory(n2, weight));
-		//n2.addEdge(new Edge<IdType, WeightType>(n1, weight));
 		n2.addEdge(edgeFactory.factory(n1, weight));
 	}
 	
@@ -36,18 +34,14 @@ EdgeType extends Edge<IdType, WeightType>> {
 		NodeType n1 = map.get(id1);
 		NodeType n2 = map.get(id2);
 		if(n1 == null) {
-			//n1 = new Node<>(id1);
 			n1 = nodeFactory.factory(id1);
 			map.put(id1, n1);
 		}
 		if(n2 == null) {
-			//n2 = new Node<>(id2);
 			n2 = nodeFactory.factory(id2);
 			map.put(id2, n2);
 		}
-		//n1.addEdge(new Edge<>(n2, weight));
 		n1.addEdge(edgeFactory.factory(n2, weight));
-		//n2.addEdge(new Edge<>(n1, weight));
 		n2.addEdge(edgeFactory.factory(n1, weight));
 	}
 	
@@ -61,16 +55,13 @@ EdgeType extends Edge<IdType, WeightType>> {
 		NodeType n1 = map.get(id1);
 		NodeType n2 = map.get(id2);
 		if(n1 == null) {
-			//n1 = new Node<>(id1);
 			n1 = nodeFactory.factory(id1);
 			map.put(id1, n1);
 		}
 		if(n2 == null) {
-			//n2 = new Node<>(id2);
 			n2 = nodeFactory.factory(id2);
 			map.put(id2, n2);
 		}
-		//n1.addEdge(new Edge<>(n2, weight));
 		n1.addEdge(edgeFactory.factory(n2, weight));
 	}
 	

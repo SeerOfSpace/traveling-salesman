@@ -44,6 +44,7 @@
                      <children>
                         <Button fx:id="loadButton" mnemonicParsing="false" text="Load File" />
                         <Button fx:id="generateButton" mnemonicParsing="false" text="Generate Random" />
+                        <Button fx:id="generateCompleteButton" mnemonicParsing="false" text="Generate Random Complete" />
                         <Button fx:id="nearestNeighborButton" mnemonicParsing="false" text="Nearest Neighbor" />
                         <CheckBox fx:id="pauseCheckBox" mnemonicParsing="false" text="Pause" />
                      </children>
