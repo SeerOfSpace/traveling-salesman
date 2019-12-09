@@ -15,9 +15,9 @@ import com.seerofspace.tsp.graph.Node;
 
 public class NearestNeighbor {
 	
-	public static <IdType, WeightType extends Comparable<WeightType>, NodeType extends Node<IdType, WeightType>, EdgeType extends Edge<IdType, WeightType>> List<Node<IdType, WeightType>> nearestNeighbor(
-			Graph<IdType, WeightType, NodeType, EdgeType> graph, 
-			NodeType startingNode) {
+	public static <IdType, WeightType extends Comparable<WeightType>> List<Node<IdType, WeightType>> nearestNeighbor(
+			Graph<IdType, WeightType, Node<IdType, WeightType>, Edge<IdType, WeightType>> graph, 
+			Node<IdType, WeightType> startingNode) {
 		
 		if(!graph.containsNode(startingNode)) {
 			throw new IllegalArgumentException("Starting node does not exist within graph");

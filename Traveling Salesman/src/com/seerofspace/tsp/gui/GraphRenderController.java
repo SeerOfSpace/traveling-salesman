@@ -141,10 +141,11 @@ public class GraphRenderController {
 	}
 	
 	private synchronized void nearestNeighborButtonFunc() {
+		revertLines();
+		wt.draw();
 		if(graph == null || wt.getStartingNode() == null) {
 			return;
 		}
-		revertLines();
 		
 		@SuppressWarnings("unchecked")
 		List<CircleNode> path = (List<CircleNode>) (List<?>)NearestNeighbor.nearestNeighbor(
