@@ -1,10 +1,8 @@
 package com.seerofspace.tsp.gui;
 
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 
 import com.seerofspace.tsp.graph.Edge;
 import com.seerofspace.tsp.graph.Graph;
@@ -12,6 +10,7 @@ import com.seerofspace.tsp.graph.Graph;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.geometry.VPos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
@@ -25,10 +24,14 @@ public class WorkThread {
 	private Canvas canvas;
 	private GraphicsContext gc;
 	private CircleNode activeCircle;
-	private static boolean stop;
+	private boolean stop;
 	private Thread thread;
 	private static Object lock;
 	private MyCircle attractor;
+	private boolean noWait;
+	private CircleNode startingNode;
+	private boolean pause;
+	private boolean waiting;
 	
 	public DoubleProperty radius = new SimpleDoubleProperty();
 	public DoubleProperty percent = new SimpleDoubleProperty();
@@ -37,33 +40,52 @@ public class WorkThread {
 	private static final double PERCENT = 0.005;
 	private static final int SLEEP = 1;
 	private static final double GRID_SPACING = 30;
-	private static final int GRID_COLUMNS = 85;
-	private static final int AMOUNT = 2000;
+	private static final int COLOR_OFFSET = 30;
 	
-	public WorkThread(Canvas canvas, Graph<String, Integer, CircleNode, LineEdge> graph) {
+	public WorkThread(Canvas canvas) {
 		this.canvas = canvas;
-		this.graph = graph;
+		graph = null;
 		gc = canvas.getGraphicsContext2D();
 		stop = false;
+		noWait = false;
 		lock = new Object();
 		activeCircle = null;
 		attractor = null;
+		startingNode = null;
+		pause = false;
+		waiting = false;
 		radius = new SimpleDoubleProperty(RADIUS);
 		percent = new SimpleDoubleProperty(PERCENT);
 		setup();
-		Platform.runLater(() -> {
-			setupGrid();
-		});
-		//testStuff();
+	}
+	
+	public void loadGraph(Graph<String, Integer, CircleNode, LineEdge> graph) {
+		stop();
+		this.graph = graph;
+		setupGrid();
 	}
 	
 	private void setup() {
+		
 		canvas.setOnMousePressed(e -> {
-			activeCircle = getCircleUnderMouse(e);
-			if(activeCircle != null) {
-				activeCircle.setVectorX(0);
-				activeCircle.setVectorY(0);
-				
+			noWait = true;
+			CircleNode circle = getCircleUnderMouse(e);
+			if(circle != null) {
+				if(e.isControlDown()) {
+					noWait = false;
+					if(startingNode == circle) {
+						startingNode = null;
+					} else {
+						startingNode = circle;
+					}
+					if(pause) {
+						draw();
+					}
+				} else {
+					activeCircle = circle;
+					activeCircle.setVectorX(0);
+					activeCircle.setVectorY(0);
+				}
 			} else {
 				attractor = new MyCircle(e.getX(), e.getY(), 5, Color.BLUE);
 			}
@@ -71,81 +93,38 @@ public class WorkThread {
 				lock.notify();
 			}
 		});
+		
 		canvas.setOnMouseDragged(e -> {
 			if(activeCircle != null) {
 				activeCircle.setX(e.getX());
 				activeCircle.setY(e.getY());
-			} else {
+			} else if(attractor != null) {
 				attractor.setX(e.getX());
 				attractor.setY(e.getY());
 			}
+			if(pause) {
+				draw();
+			}
 		});
+		
 		canvas.setOnMouseReleased(e -> {
 			activeCircle = null;
 			attractor = null;
+			noWait = false;
 		});
 		
-		thread = new Thread(() -> {
-			try {
+		canvas.widthProperty().addListener(e -> {
+			if(waiting) {
 				draw();
-				Thread.sleep(2000);
-				Point2D.Double tempStorage = new Point2D.Double();
-				Collection<CircleNode> collection = graph.getCollection();
-				boolean movement;
-				double radius;
-				double percent;
-				while(!stop) {
-					radius = this.radius.get();
-					percent = this.percent.get();
-					movement = false;
-					for(CircleNode c1 : collection) {
-						if(c1 != activeCircle) {
-							for(CircleNode c2 : collection) {
-								if(c2 != c1) {
-									repel(c1, c2, radius, percent, 0, tempStorage);
-								}
-							}
-							for(Edge<String, Integer> edge : c1.getAdjacentCollection()) {
-								CircleNode c2 = (CircleNode) edge.getDestination();
-								attract(c1, c2, 1000, 0.1 * 1 / (edge.getWeight() + 40), 0, tempStorage);
-							}
-							if(attractor != null) {
-								attract(c1, attractor, 1000, 0.01, 100, tempStorage);
-							}
-							movement = movement | c1.getVectorX() > 0.02;
-							movement = movement | c1.getVectorY() > 0.02;
-							c1.calculate();
-						}
-					}
-					draw();
-					if(movement || activeCircle != null || attractor != null) {
-						Thread.sleep(SLEEP);
-					} else {
-						synchronized(lock) {
-							System.out.println("waiting");
-							lock.wait();
-							System.out.println("waiting done");
-						}
-					}
-				}
-			} catch (InterruptedException e1) {
-				e1.printStackTrace();
 			}
 		});
 		
-	}
-	
-	@SuppressWarnings("unused")
-	private void testStuff(List<MyCircle> circleList) {
-		circleList = new ArrayList<>();
-		for(int i = 0; i < Math.ceil(AMOUNT / (double) GRID_COLUMNS); i++) {
-			int num;
-			for(int j = 0; j < GRID_COLUMNS && (num = i * GRID_COLUMNS + j) < AMOUNT; j++) {
-				Color color = Color.hsb(360 / (double) AMOUNT * num, 1, 1, 0.25);
-				MyCircle circle = new MyCircle((j + 1) * GRID_SPACING, (i + 1) * GRID_SPACING, 10, color);
-				circleList.add(circle);
+		canvas.heightProperty().addListener(e -> {
+			if(waiting) {
+				draw();
 			}
-		}
+		});
+		
 	}
 	
 	private void setupGrid() {
@@ -162,7 +141,7 @@ public class WorkThread {
 				double x = ((double) j - (double) squareSide / 2.0) * GRID_SPACING + centerX;
 				circle.setX(x);
 				circle.setY(y);
-				Color color = Color.hsb(360 / size * (i * squareSide + j), 1, 0.9, 1);
+				Color color = Color.hsb((360 - COLOR_OFFSET) / size * (i * squareSide + j) + COLOR_OFFSET, 1.0, 0.9, 1.0);
 				circle.setColor(color);
 				circle.getAdjacentCollection().forEach(edge -> {
 					((LineEdge) edge).setColor(Color.hsb(color.getHue(), color.getSaturation(), color.getBrightness(), 0.6));
@@ -172,7 +151,79 @@ public class WorkThread {
 	}
 	
 	public void start() {
-		thread.start();
+		if(graph != null) {
+			if(thread != null) {
+				try {
+					thread.join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			stop = false;
+			setupThread();
+			thread.start();
+		}
+	}
+	
+	private void setupThread() {
+		thread = new Thread(() -> {
+			try {
+				draw();
+				Thread.sleep(1000);
+				Point2D.Double tempStorage = new Point2D.Double();
+				Collection<CircleNode> collection = graph.getCollection();
+				boolean movement;
+				double radius;
+				double percent;
+				double weight;
+				Edge<String, Integer> tempEdge;
+				while(!stop) {
+					radius = this.radius.get();
+					percent = this.percent.get();
+					movement = false;
+					for(CircleNode c1 : collection) {
+						if(c1 != activeCircle) {
+							for(CircleNode c2 : collection) {
+								if(c2 != c1) {
+									repel(c1, c2, radius, percent, 0, tempStorage);
+								}
+							}
+							for(Edge<String, Integer> edge : c1.getAdjacentCollection()) {
+								CircleNode c2 = (CircleNode) edge.getDestination();
+								tempEdge = edge.getDestination().getEdge(c1.getId());
+								if(tempEdge == null) {
+									weight = edge.getWeight();
+								} else {
+									weight = (edge.getWeight() + tempEdge.getWeight()) / 2.0;
+								}
+								attract(c1, c2, 1000, 0.1 * 1 / (weight + 40), 0, tempStorage);
+							}
+							if(attractor != null) {
+								attract(c1, attractor, 1000, 0.01, 100, tempStorage);
+							}
+							movement = movement | c1.getVectorX() > 0.02;
+							movement = movement | c1.getVectorY() > 0.02;
+							c1.calculate();
+						}
+					}
+					draw();
+					if((movement || noWait) && !pause) {
+						Thread.sleep(SLEEP);
+					} else {
+						synchronized(lock) {
+							drawOnPause();							
+							waiting = true;
+							do {
+								lock.wait();
+							} while(pause);
+							waiting = false;
+						}
+					}
+				}
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
+		});
 	}
 	
 	private CircleNode getCircleUnderMouse(MouseEvent e) {
@@ -186,13 +237,18 @@ public class WorkThread {
 		return null;
 	}
 	
-	private void draw() {
+	protected void draw() {
+		if(graph == null) {
+			return;
+		}
+		
 		Platform.runLater(() -> {
 			boolean undirected;
 			double angle;
 			Point2D.Double point = new Point2D.Double();
 			double[] arrowPointsX = {-5, 0, 5};
 			gc.setTextAlign(TextAlignment.CENTER);
+			gc.setTextBaseline(VPos.CENTER);
 			gc.setFont(Font.font(20));
 			gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
 			
@@ -209,10 +265,10 @@ public class WorkThread {
 						undirected = line.getWeight().equals(c.getEdge(circle.getId()).getWeight());
 						if(undirected) {
 							gc.strokeLine(circle.getX(), circle.getY(), c.getX(), c.getY());
-							calcPerpendicularPosition(circle, c, 10, point);
+							calcPerpendicularPosition(circle, c, 15, point);
 						} else {
 							int curveDistance = 75;
-							int labelDistance = 40;
+							int labelDistance = 50;
 							if(c.drawn) {
 								curveDistance *= -1;
 								labelDistance *= -1;
@@ -255,10 +311,14 @@ public class WorkThread {
 			gc.setLineWidth(0.1);
 			gc.setFont(Font.font(23));
 			graph.getCollection().forEach(circle -> {
-				gc.setFill(circle.getColor());
+				if(circle == startingNode) {
+					gc.setFill(Color.RED);
+				} else {
+					gc.setFill(circle.getColor());
+				}
 				gc.fillOval(circle.getX() - circle.getRadius(), circle.getY() - circle.getRadius(), circle.getRadius() * 2, circle.getRadius() * 2);
-				gc.fillText(circle.getId(), circle.getX(), circle.getY() + 40);
-				gc.strokeText(circle.getId(), circle.getX(), circle.getY() + 40);
+				gc.fillText(circle.getId(), circle.getX(), circle.getY() + 30);
+				gc.strokeText(circle.getId(), circle.getX(), circle.getY() + 30);
 				circle.drawn = false;
 			});
 			
@@ -267,6 +327,17 @@ public class WorkThread {
 				gc.fillOval(attractor.getX() - attractor.getRadius(), attractor.getY() - attractor.getRadius(), attractor.getRadius() * 2, attractor.getRadius() * 2);
 			}
 			
+			if(waiting) {
+				drawOnPause();
+			}
+			
+		});
+	}
+	
+	private void drawOnPause() {
+		Platform.runLater(() -> {
+			gc.setFill(Color.RED);
+			gc.fillOval(10, 10, 20, 20);
 		});
 	}
 	
@@ -335,8 +406,23 @@ public class WorkThread {
 		result.setLocation(x, y);
 	}
 	
-	public static void stop() {
+	public void stop() {
 		stop = true;
+		synchronized(lock) {
+			lock.notify();
+		}
+	}
+
+	public CircleNode getStartingNode() {
+		return startingNode;
+	}
+	
+	public void pause() {
+		pause = true;
+	}
+	
+	public void unpause() {
+		pause = false;
 		synchronized(lock) {
 			lock.notify();
 		}

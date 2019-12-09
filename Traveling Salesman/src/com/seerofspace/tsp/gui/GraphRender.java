@@ -8,6 +8,8 @@ import javafx.stage.Stage;
 
 public class GraphRender extends Application {
 	
+	private GraphRenderController controller;
+	
 	public static void main(String[] args) {
 		launch();
 	}
@@ -20,13 +22,13 @@ public class GraphRender extends Application {
 		primaryStage.setScene(scene);
 		primaryStage.setTitle("Graph Render");
 		primaryStage.show();
-		//GraphRenderController controller = (GraphRenderController) loader.getController();
+		controller = (GraphRenderController) loader.getController();
 		primaryStage.setMaximized(true);
 	}
 	
 	@Override
 	public void stop(){
-	    WorkThread.stop();
+		controller.getWorkThread().stop();
 	}
 	
 }

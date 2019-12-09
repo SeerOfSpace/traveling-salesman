@@ -15,9 +15,9 @@ import com.seerofspace.tsp.graph.Node;
 
 public class NearestNeighbor {
 	
-	public static <IdType, WeightType extends Comparable<WeightType>> List<Node<IdType, WeightType>> nearestNeighbor(
-			Graph<IdType, WeightType, Node<IdType, WeightType>, Edge<IdType, WeightType>> graph, 
-			Node<IdType, WeightType> startingNode) {
+	public static <IdType, WeightType extends Comparable<WeightType>, NodeType extends Node<IdType, WeightType>, EdgeType extends Edge<IdType, WeightType>> List<Node<IdType, WeightType>> nearestNeighbor(
+			Graph<IdType, WeightType, NodeType, EdgeType> graph, 
+			NodeType startingNode) {
 		
 		if(!graph.containsNode(startingNode)) {
 			throw new IllegalArgumentException("Starting node does not exist within graph");
@@ -80,17 +80,14 @@ public class NearestNeighbor {
 		return lowest.getDestination();
 	}
 	
-	private static class BacktraceNode<IdType, WeightType> extends Node<IdType, WeightType> {
+	private static class BacktraceNode<IdType, WeightType> {
 
-		private BacktraceNode<IdType, WeightType> parent;
+		BacktraceNode<IdType, WeightType> parent;
+		Node<IdType, WeightType> node;
 		
-		protected BacktraceNode(Node<IdType, WeightType> node, BacktraceNode<IdType, WeightType> parent) {
-			super(node);
+		public BacktraceNode(Node<IdType, WeightType> node, BacktraceNode<IdType, WeightType> parent) {
 			this.parent = parent;
-		}
-		
-		public BacktraceNode<IdType, WeightType> getParent() {
-			return parent;
+			this.node = node;
 		}
 		
 	}
@@ -110,23 +107,23 @@ public class NearestNeighbor {
 		});
 		
 		while(!queue.isEmpty()) {
-			BacktraceNode<IdType, WeightType> nextNode = queue.poll();
+			BacktraceNode<IdType, WeightType> nextBacktraceNode = queue.poll();
 			
-			if(!visitedNodes.containsKey(nextNode.getId())) {
+			if(!visitedNodes.containsKey(nextBacktraceNode.node.getId())) {
 				List<Node<IdType, WeightType>> path = new ArrayList<>();
 				do {
-					path.add(nextNode);
-					nextNode = nextNode.getParent();
-				} while(nextNode != null);
+					path.add(nextBacktraceNode.node);
+					nextBacktraceNode = nextBacktraceNode.parent;
+				} while(nextBacktraceNode != null);
 				Collections.reverse(path);
 				return path;
 			}
 			
-			if(nextNode.getAdjacentSize() != 0) {
-				list = getOrderedAdjacentList(nextNode);
+			if(nextBacktraceNode.node.getAdjacentSize() != 0) {
+				list = getOrderedAdjacentList(nextBacktraceNode.node);
 				for(Node<IdType, WeightType> e : list) {
 					if(!visitedNodesQueue.containsKey(e.getId())) { 
-						queue.add(new BacktraceNode<IdType, WeightType>(e, nextNode));
+						queue.add(new BacktraceNode<IdType, WeightType>(e, nextBacktraceNode));
 						visitedNodesQueue.put(e.getId(), e);
 					}
 				}

@@ -31,8 +31,11 @@ public class Node<IdType, WeightType> {
 	}
 	
 	public boolean containsDestination(Node<IdType, WeightType> node) {
-		Node<IdType, WeightType> temp = adjacentMap.get(node.id).getDestination();
-		if(node == temp) {
+		Edge<IdType, WeightType> edge = adjacentMap.get(node.id);
+		if(edge == null) {
+			return false;
+		}
+		if(node == edge.getDestination()) {
 			return true;
 		}
 		return false;

@@ -79,7 +79,7 @@ EdgeType extends Edge<IdType, WeightType>> {
 	}
 	
 	public boolean containsNode(NodeType node) {
-		Node<IdType, WeightType> temp = map.get(node.getId());
+		NodeType temp = map.get(node.getId());
 		if(temp == node) {
 			return true;
 		}
