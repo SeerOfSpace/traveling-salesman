@@ -8,6 +8,7 @@ import javafx.stage.Stage;
 
 public class GraphRenderDriver extends Application {
 	
+	public static final String VERSION = "1.0";
 	private GraphRenderController controller;
 	
 	public static void main(String[] args) {

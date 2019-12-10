@@ -4,9 +4,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.function.Supplier;
 
+import com.seerofspace.tsp.core.BranchAndBound;
+import com.seerofspace.tsp.core.MyException;
 import com.seerofspace.tsp.core.NearestNeighbor;
 import com.seerofspace.tsp.graph.Edge;
 import com.seerofspace.tsp.graph.Graph;
@@ -14,16 +18,25 @@ import com.seerofspace.tsp.graph.Node;
 
 import javafx.animation.Interpolator;
 import javafx.animation.Transition;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.effect.BlurType;
+import javafx.scene.effect.InnerShadow;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.util.Duration;
@@ -35,8 +48,12 @@ public class GraphRenderController {
 	@FXML private Button generateButton;
 	@FXML private Button generateCompleteButton;
 	@FXML private Button nearestNeighborButton;
+	@FXML private Button branchAndBoundButton;
 	@FXML private CheckBox pauseCheckBox;
 	@FXML private VBox sideBar;
+	@FXML private MenuItem exitMenuItem;
+	@FXML private MenuItem aboutMenuItem;
+	@FXML private MenuItem controlsMenuItem;
 	private FileChooser fileChooser;
 	private Graph<String, Integer, CircleNode, LineEdge> graph;
 	private WorkThread wt;
@@ -86,7 +103,18 @@ public class GraphRenderController {
 				revertLines();
 				wt.draw();
 			}
+			clearStatistics();
 			nearestNeighborButtonFunc();
+		});
+		
+		branchAndBoundButton.setOnAction(e -> {
+			animationThread.interrupt();
+			synchronized(this) {
+				revertLines();
+				wt.draw();
+			}
+			clearStatistics();
+			branchAndBoundButtonFunc();
 		});
 		
 		generateButton.setOnAction(e -> {
@@ -109,6 +137,49 @@ public class GraphRenderController {
 			}
 		});
 		
+		exitMenuItem.setOnAction(e -> {
+			Platform.exit();
+		});
+		
+		aboutMenuItem.setOnAction(e -> {
+			new Alert(AlertType.NONE, "version " + GraphRenderDriver.VERSION, ButtonType.CLOSE).showAndWait();
+		});
+		
+		controlsMenuItem.setOnAction(e -> {
+			String s = 
+					"Click individual nodes to move them around" + "\n" + 
+					"Click on an empty space to attract the nodes to the spot" + "\n" + 
+					"Control click on individual nodes to mark them as the starting node" + "\n" +
+					"Control click the node again to deselect them" + "\n" +
+					"Use the pause button to move the nodes around without physics" + "\n" +
+					"The side bar is resizable if it is too small" + "\n" +
+					"In the side bar, additional statistics like total route length will show up when using either algorithm";
+			new Alert(AlertType.NONE, s, ButtonType.CLOSE).showAndWait();
+		});
+		
+		animateHelpMenu();
+		
+	}
+	
+	private void animateHelpMenu() {
+		Menu helpMenu = controlsMenuItem.getParentMenu();
+		String originalStyle = helpMenu.getStyle();		
+		Transition transition = new Transition() {
+			{
+				this.setCycleDuration(Duration.millis(800));
+				this.setAutoReverse(true);
+				this.setCycleCount(4);
+			}
+			@Override
+			protected void interpolate(double frac) {
+				String s1 = String.format("%.100f", frac * 0.5);
+				helpMenu.setStyle("-fx-background-color: rgba(255, 255, 0, " + s1 + ");");
+			}
+		};
+		transition.setOnFinished(e -> {
+			helpMenu.setStyle(originalStyle);
+		});
+		transition.play();
 	}
 	
 	private synchronized void loadButtonFunc() {
@@ -183,14 +254,54 @@ public class GraphRenderController {
 	}
 	
 	private synchronized void nearestNeighborButtonFunc() {
-		if(graph == null || wt.getStartingNode() == null) {
+		Supplier<List<CircleNode>> supplier = new Supplier<List<CircleNode>>() {
+			@Override
+			public List<CircleNode> get() {
+				try {
+					@SuppressWarnings("unchecked")
+					List<CircleNode> path = (List<CircleNode>) (List<?>)NearestNeighbor.nearestNeighbor(
+							(Graph<String, Integer, Node<String, Integer>, Edge<String, Integer>>) (Graph<?, ?, ?, ?>) graph,
+							(Node<String, Integer>) wt.getStartingNode());
+					return path;
+				} catch (MyException e) {
+					new Alert(AlertType.ERROR, e.getMessage()).showAndWait();
+					return null;
+				}
+			}
+		};
+		showAlgorithm(supplier);
+	}
+	
+	private synchronized void branchAndBoundButtonFunc() {
+		Supplier<List<CircleNode>> supplier = new Supplier<List<CircleNode>>() {
+			@Override
+			public List<CircleNode> get() {
+				try {
+					@SuppressWarnings("unchecked")
+					List<CircleNode> path = (List<CircleNode>) (List<?>)BranchAndBound.branchAndBound(
+							(Graph<String, Integer, Node<String, Integer>, Edge<String, Integer>>) (Graph<?, ?, ?, ?>) graph,
+							(Node<String, Integer>) wt.getStartingNode());
+					return path;
+				} catch (MyException e) {
+					new Alert(AlertType.ERROR, e.getMessage()).showAndWait();
+					return null;
+				}
+			}
+		};
+		showAlgorithm(supplier);
+	}
+	
+	private synchronized void showAlgorithm(Supplier<List<CircleNode>> supplier) {
+		if(graph == null) {
+			new Alert(AlertType.ERROR, "No graph created").showAndWait();
+			return;
+		}
+		if(wt.getStartingNode() == null) {
+			new Alert(AlertType.ERROR, "No starting node selected").showAndWait();
 			return;
 		}
 		
-		@SuppressWarnings("unchecked")
-		List<CircleNode> path = (List<CircleNode>) (List<?>)NearestNeighbor.nearestNeighbor(
-				(Graph<String, Integer, Node<String, Integer>, Edge<String, Integer>>) (Graph<?, ?, ?, ?>) graph,
-				(Node<String, Integer>) wt.getStartingNode());
+		List<CircleNode> path = supplier.get();
 		
 		if(path == null) {
 			return;
@@ -246,22 +357,30 @@ public class GraphRenderController {
 			Graph<String, Integer, CircleNode, LineEdge> graph) {
 		
 		try {
-			Scanner scanner = new Scanner(file);
-			scanner.useDelimiter(", |\\r\\n");
-			while(scanner.hasNextLine()) {
-				String id1 = scanner.next();
-				String id2 = scanner.next();
-				int weight = scanner.nextInt();
-				boolean directed = scanner.nextBoolean();
+			Scanner scanner1 = new Scanner(file);
+			Scanner scanner2;
+			while(scanner1.hasNextLine()) {
+				String line = scanner1.nextLine();
+				if(line.charAt(0) == '#') {
+					continue;
+				}
+				scanner2 = new Scanner(line);
+				scanner2.useDelimiter(", ");
+				String id1 = scanner2.next();
+				String id2 = scanner2.next();
+				int weight = scanner2.nextInt();
+				boolean directed = scanner2.nextBoolean();
 				if(directed) {
 					graph.addEdgeDirected(id1, id2, weight);
 				} else {
 					graph.addEdgeUndirected(id1, id2, weight);
 				}
+				scanner2.close();
 			}
-			scanner.close();
-		} catch (FileNotFoundException e) {
+			scanner1.close();
+		} catch (FileNotFoundException | NoSuchElementException e) {
 			e.printStackTrace();
+			new Alert(AlertType.ERROR, e.getMessage()).showAndWait();
 		}
 	}
 	
@@ -297,7 +416,6 @@ public class GraphRenderController {
 	
 	private void showStatistics() {
 		List<javafx.scene.Node> list = statisticsGroup.getChildren();
-		clearStatistics();
 		StringBuilder builder = new StringBuilder();
 		builder.append("\n");
 		builder.append("Total Length: " + getRouteLength(previousPath) + "\n");
@@ -311,11 +429,14 @@ public class GraphRenderController {
 			builder.append(c.getId());
 			if(i > 0) {
 				builder.append(": " + previousPath.get(i - 1).getEdge(c.getId()).getWeight());
+			} else {
+				builder.append(": " + (char) 11015);
 			}
 			builder.append("\n");
 		}
 		Label label = new Label();
 		label.setText(builder.toString());
+		label.setFont(Font.font(java.awt.Font.MONOSPACED, 16));
 		list.add(label);
 	}
 	

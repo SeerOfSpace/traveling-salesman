@@ -1,3 +1,4 @@
+#Format of Name1, Name2, Weight, Directed?
 Rockville, Silver Spring, 13, true
 Rockville, Philadelphia, 142, true
 Rockville, Pittsburgh, 225, true

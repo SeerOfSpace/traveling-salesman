@@ -259,7 +259,7 @@ public class WorkThread {
 					gc.setLineWidth(line.getThickness());
 					gc.setFill(line.getColor());
 					gc.setStroke(line.getColor());
-					double[] arrowPointsY = {10 + c.getRadius(), 0 + c.getRadius(), 10 + c.getRadius()};
+					double[] arrowPointsY = {12 + c.getRadius(), 0 + c.getRadius(), 12 + c.getRadius()};
 					
 					if(c.containsDestination(circle)) {
 						undirected = line.getWeight().equals(c.getEdge(circle.getId()).getWeight());

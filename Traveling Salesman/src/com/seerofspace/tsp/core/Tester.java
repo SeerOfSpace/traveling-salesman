@@ -4,15 +4,19 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 import com.seerofspace.tsp.graph.Edge;
 import com.seerofspace.tsp.graph.Graph;
 import com.seerofspace.tsp.graph.Node;
 
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+
 public class Tester {
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws MyException {
 		
 		Graph<String, Integer, Node<String, Integer>, Edge<String, Integer>> graph = 
 				new Graph<>(new MyNodeFactory<>(), new MyEdgeFactory<>());
@@ -50,26 +54,34 @@ public class Tester {
 		}
 	}
 	
-	public static void loadFile(File file, 
-			Graph<String, Integer, Node<String, Integer>, Edge<String, Integer>> graph) {
+	private static void loadFile(File file, 
+			Graph<String, Integer, ?, ?> graph) {
 		
 		try {
-			Scanner scanner = new Scanner(file);
-			scanner.useDelimiter(", |\\r\\n");
-			while(scanner.hasNextLine()) {
-				String id1 = scanner.next();
-				String id2 = scanner.next();
-				int weight = scanner.nextInt();
-				boolean directed = scanner.nextBoolean();
+			Scanner scanner1 = new Scanner(file);
+			Scanner scanner2;
+			while(scanner1.hasNextLine()) {
+				String line = scanner1.nextLine();
+				if(line.charAt(0) == '#') {
+					continue;
+				}
+				scanner2 = new Scanner(line);
+				scanner2.useDelimiter(", ");
+				String id1 = scanner2.next();
+				String id2 = scanner2.next();
+				int weight = scanner2.nextInt();
+				boolean directed = scanner2.nextBoolean();
 				if(directed) {
 					graph.addEdgeDirected(id1, id2, weight);
 				} else {
 					graph.addEdgeUndirected(id1, id2, weight);
 				}
+				scanner2.close();
 			}
-			scanner.close();
-		} catch (FileNotFoundException e) {
+			scanner1.close();
+		} catch (FileNotFoundException | NoSuchElementException e) {
 			e.printStackTrace();
+			new Alert(AlertType.ERROR, e.getMessage()).showAndWait();
 		}
 	}
 	

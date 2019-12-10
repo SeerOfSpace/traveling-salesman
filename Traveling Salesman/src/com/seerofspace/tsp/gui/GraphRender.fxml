@@ -18,17 +18,13 @@
         <menus>
           <Menu mnemonicParsing="false" text="File">
             <items>
-              <MenuItem mnemonicParsing="false" text="Close" />
-            </items>
-          </Menu>
-          <Menu mnemonicParsing="false" text="Edit">
-            <items>
-              <MenuItem mnemonicParsing="false" text="Delete" />
+              <MenuItem fx:id="exitMenuItem" mnemonicParsing="false" text="Exit" />
             </items>
           </Menu>
           <Menu mnemonicParsing="false" text="Help">
             <items>
-              <MenuItem mnemonicParsing="false" text="About" />
+              <MenuItem fx:id="aboutMenuItem" mnemonicParsing="false" text="About" />
+                  <MenuItem fx:id="controlsMenuItem" mnemonicParsing="false" text="Controls" />
             </items>
           </Menu>
         </menus>
@@ -46,6 +42,7 @@
                         <Button fx:id="generateButton" mnemonicParsing="false" text="Generate Random" />
                         <Button fx:id="generateCompleteButton" mnemonicParsing="false" text="Generate Random Complete" />
                         <Button fx:id="nearestNeighborButton" mnemonicParsing="false" text="Nearest Neighbor" />
+                        <Button fx:id="branchAndBoundButton" mnemonicParsing="false" text="Branch And Bound" />
                         <CheckBox fx:id="pauseCheckBox" mnemonicParsing="false" text="Pause" />
                      </children>
                      <padding>

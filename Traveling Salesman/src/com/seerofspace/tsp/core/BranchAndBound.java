@@ -12,10 +12,13 @@ public class BranchAndBound {
 	
 	public static <IdType> List<Node<IdType, Integer>> branchAndBound(
 			Graph<IdType, Integer, Node<IdType, Integer>, Edge<IdType, Integer>> graph,
-			Node<IdType, Integer> startingNode) {
+			Node<IdType, Integer> startingNode) throws MyException {
 		
+		if(!graph.containsNode(startingNode.getId())) {
+			throw new MyException("Graph does not contain the starting node");
+		}
 		if(!isCompleteGraph(graph)) {
-			throw new IllegalArgumentException("Graph is not complete");
+			throw new MyException("Graph is not complete");
 		}
 		DataStruct<IdType> dataStruct = new DataStruct<>();
 		dataStruct.graphSize = graph.getSize();

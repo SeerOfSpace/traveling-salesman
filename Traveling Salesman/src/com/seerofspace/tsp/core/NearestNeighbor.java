@@ -17,10 +17,10 @@ public class NearestNeighbor {
 	
 	public static <IdType, WeightType extends Comparable<WeightType>> List<Node<IdType, WeightType>> nearestNeighbor(
 			Graph<IdType, WeightType, Node<IdType, WeightType>, Edge<IdType, WeightType>> graph, 
-			Node<IdType, WeightType> startingNode) {
+			Node<IdType, WeightType> startingNode) throws MyException {
 		
 		if(!graph.containsNode(startingNode)) {
-			throw new IllegalArgumentException("Starting node does not exist within graph");
+			throw new MyException("Graph does not contain the starting node");
 		}
 		Map<IdType, Node<IdType, WeightType>> visitedNodes = new HashMap<>(graph.getSize());
 		List<Node<IdType, WeightType>> route = new ArrayList<>(graph.getSize());
@@ -31,14 +31,14 @@ public class NearestNeighbor {
 		
 		while(visitedNodes.size() != graph.getSize()) {
 			if(currentNode.getAdjacentSize() == 0) {
-				throw new RuntimeException("Node has no edges");
+				throw new MyException("A node has no edges");
 			}
 			
 			Node<IdType, WeightType> nextNode = findNextPath(currentNode, visitedNodes);
 			if(nextNode == null) {
 				List<Node<IdType, WeightType>> pathList = findNextPathBFSearch(currentNode, visitedNodes);
 				if(pathList == null) {
-					throw new RuntimeException("Path cannot be found");
+					throw new MyException("Path cannot be found");
 				}
 				route.addAll(pathList);
 				nextNode = pathList.get(pathList.size() - 1);
