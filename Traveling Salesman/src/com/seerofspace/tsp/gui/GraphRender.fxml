@@ -35,7 +35,7 @@
       </MenuBar>
    </top>
    <center>
-      <SplitPane dividerPositions="0.75" BorderPane.alignment="CENTER">
+      <SplitPane dividerPositions="0.65" BorderPane.alignment="CENTER">
          <items>
             <AnchorPane fx:id="anchorPane" />
             <ScrollPane fitToWidth="true" hbarPolicy="NEVER" prefWidth="200.0" SplitPane.resizableWithParent="false">

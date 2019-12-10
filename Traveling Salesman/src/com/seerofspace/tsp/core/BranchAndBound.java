@@ -1,7 +1,8 @@
 package com.seerofspace.tsp.core;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Stack;
 
 import com.seerofspace.tsp.graph.Edge;
 import com.seerofspace.tsp.graph.Graph;
@@ -13,36 +14,64 @@ public class BranchAndBound {
 			Graph<IdType, Integer, Node<IdType, Integer>, Edge<IdType, Integer>> graph,
 			Node<IdType, Integer> startingNode) {
 		
-		
-		
-		return null;
+		if(!isCompleteGraph(graph)) {
+			throw new IllegalArgumentException("Graph is not complete");
+		}
+		DataStruct<IdType> dataStruct = new DataStruct<>();
+		dataStruct.graphSize = graph.getSize();
+		dataStruct.bestLength = Integer.MAX_VALUE;
+		dataStruct.currentSolution = new Stack<>();
+		dataStruct.currentSolution.push(startingNode);
+		branchAndBoundRecursive(startingNode, 0, dataStruct);
+		return dataStruct.bestSolution;
 	}
 	
-	public static <IdType> List<Node<IdType, Integer>> branchAndBoundRecursive(
-			Graph<IdType, Integer, Node<IdType, Integer>, Edge<IdType, Integer>> graph,
+	private static <IdType> void branchAndBoundRecursive(
 			Node<IdType, Integer> currentNode,
-			List<Node<IdType, Integer>> currentSolution,
-			Integer currentLength,
-			List<Node<IdType, Integer>> bestSolution,
-			Integer bestLength) {
+			int currentLength,
+			DataStruct<IdType> dataStruct) {
 		
-		if(currentLength > bestLength) {
-			//return
+		if(dataStruct.currentSolution.size() == dataStruct.graphSize) {
+			Node<IdType, Integer> startingNode = dataStruct.currentSolution.get(0);
+			int lastLength = dataStruct.currentSolution.peek().getEdge(startingNode.getId()).getWeight();
+			if(currentLength + lastLength < dataStruct.bestLength) {
+				dataStruct.bestLength = currentLength + lastLength;
+				dataStruct.bestSolution = new ArrayList<>(dataStruct.currentSolution);
+				dataStruct.bestSolution.add(startingNode);
+			}
+			return;
 		}
 		
-		for(Node<IdType, Integer> nextNode : currentNode.getAdjacentCollection().stream().map(e -> e.getDestination()).collect(Collectors.toList())) {
-			
+		for(Edge<IdType, Integer> nextEdge : currentNode.getAdjacentCollection()) {
+			Node<IdType, Integer> nextNode = nextEdge.getDestination();
+			if(dataStruct.currentSolution.contains(nextNode)) {
+				continue;
+			}
+			int newLength = currentLength + nextEdge.getWeight();
+			if(newLength >= dataStruct.bestLength) {
+				continue;
+			}
+			dataStruct.currentSolution.push(nextNode);
+			branchAndBoundRecursive(nextNode, newLength, dataStruct);
+			dataStruct.currentSolution.pop();
 		}
-		
-		return null;
 	}
 	
-	public static int getRouteLength(List<Node<String, Integer>> route) {
-		int length = 0;
-		for(int i = 0; i < route.size() - 1; i++) {
-			length += route.get(i).getEdge(route.get(i + 1).getId()).getWeight();
+	private static class DataStruct<IdType> {
+		int graphSize;
+		Stack<Node<IdType, Integer>> currentSolution;
+		List<Node<IdType, Integer>> bestSolution;
+		int bestLength;
+	}
+	
+	private static <IdType> boolean isCompleteGraph(Graph<IdType, ?, ?, ?> graph) {
+		for(Node<IdType, ?> node : graph.getCollection()) {
+			int size = node.containsDestination(node.getId()) ? graph.getSize() : graph.getSize() - 1;
+			if(node.getAdjacentSize() != size) {
+				return false;
+			}
 		}
-		return length;
+		return true;
 	}
 	
 }

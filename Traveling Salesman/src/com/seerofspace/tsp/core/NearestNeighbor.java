@@ -3,11 +3,11 @@ package com.seerofspace.tsp.core;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
 import com.seerofspace.tsp.graph.Edge;
 import com.seerofspace.tsp.graph.Graph;
@@ -34,9 +34,9 @@ public class NearestNeighbor {
 				throw new RuntimeException("Node has no edges");
 			}
 			
-			Node<IdType, WeightType> nextNode = findNextPathShallow(currentNode, visitedNodes);
+			Node<IdType, WeightType> nextNode = findNextPath(currentNode, visitedNodes);
 			if(nextNode == null) {
-				List<Node<IdType, WeightType>> pathList = findNextPathDeep(currentNode, visitedNodes);
+				List<Node<IdType, WeightType>> pathList = findNextPathBFSearch(currentNode, visitedNodes);
 				if(pathList == null) {
 					throw new RuntimeException("Path cannot be found");
 				}
@@ -57,14 +57,12 @@ public class NearestNeighbor {
 		return route;
 	}
 	
-	private static <IdType, WeightType extends Comparable<WeightType>> Node<IdType, WeightType> findNextPathShallow(
+	private static <IdType, WeightType extends Comparable<WeightType>> Node<IdType, WeightType> findNextPath(
 			Node<IdType, WeightType> currentNode, 
 			Map<IdType, Node<IdType, WeightType>> visitedNodes) {
 		
-		Iterator<Edge<IdType, WeightType>> iterator = currentNode.getAdjacentIterator();
 		Edge<IdType, WeightType> lowest = null;
-		while(iterator.hasNext()) {
-			Edge<IdType, WeightType> nextEdge = iterator.next();
+		for(Edge<IdType, WeightType> nextEdge : currentNode.getAdjacentCollection()) {
 			if(nextEdge.getDestination() == currentNode) {
 				continue;
 			}
@@ -92,21 +90,22 @@ public class NearestNeighbor {
 		
 	}
 	
-	private static <IdType, WeightType extends Comparable<WeightType>> List<Node<IdType, WeightType>> findNextPathDeep(
+	private static <IdType, WeightType extends Comparable<WeightType>> List<Node<IdType, WeightType>> findNextPathBFSearch(
 			Node<IdType, WeightType> currentNode, 
 			Map<IdType, Node<IdType, WeightType>> visitedNodes) {
 		
-		Map<IdType, Node<IdType, WeightType>> visitedNodesQueue = new HashMap<>();
-		visitedNodesQueue.put(currentNode.getId(), currentNode);
+		List<Node<IdType, WeightType>> searchedNodes = new ArrayList<>();
+		searchedNodes.add(currentNode);
 		
 		Queue<BacktraceNode<IdType, WeightType>> queue = new LinkedList<>();
 		List<Node<IdType, WeightType>> list = getOrderedAdjacentList(currentNode);
-		list.forEach(e -> {
-			queue.add(new BacktraceNode<IdType, WeightType>(e, null));
-			visitedNodesQueue.put(e.getId(), e);
+		list.forEach(node -> {
+			queue.add(new BacktraceNode<IdType, WeightType>(node, null));
+			searchedNodes.add(node);
 		});
 		
 		while(!queue.isEmpty()) {
+			
 			BacktraceNode<IdType, WeightType> nextBacktraceNode = queue.poll();
 			
 			if(!visitedNodes.containsKey(nextBacktraceNode.node.getId())) {
@@ -121,10 +120,10 @@ public class NearestNeighbor {
 			
 			if(nextBacktraceNode.node.getAdjacentSize() != 0) {
 				list = getOrderedAdjacentList(nextBacktraceNode.node);
-				for(Node<IdType, WeightType> e : list) {
-					if(!visitedNodesQueue.containsKey(e.getId())) { 
-						queue.add(new BacktraceNode<IdType, WeightType>(e, nextBacktraceNode));
-						visitedNodesQueue.put(e.getId(), e);
+				for(Node<IdType, WeightType> node : list) {
+					if(!searchedNodes.contains(node)) { 
+						queue.add(new BacktraceNode<IdType, WeightType>(node, nextBacktraceNode));
+						searchedNodes.add(node);
 					}
 				}
 			}
@@ -137,18 +136,12 @@ public class NearestNeighbor {
 	private static <IdType, WeightType extends Comparable<WeightType>> List<Node<IdType, WeightType>> getOrderedAdjacentList(
 			Node<IdType, WeightType> node) {
 		
-		List<Edge<IdType, WeightType>> list = new ArrayList<>(node.getAdjacentSize());
-		List<Node<IdType, WeightType>> result = new ArrayList<>(node.getAdjacentSize());
-		node.getAdjacentIterator().forEachRemaining(e -> {
-			list.add(e);
-		});
-		list.sort((e1, e2) -> {
-			return e1.getWeight().compareTo(e2.getWeight());
-		});
-		list.forEach(e -> {
-			result.add(e.getDestination());
-		});
-		return result;
+		List<Node<IdType, WeightType>> list = node.getAdjacentCollection().stream()
+				.sorted((e1, e2) -> e1.getWeight().compareTo(e2.getWeight()))
+				.map(e -> e.getDestination())
+				.collect(Collectors.toList());
+		
+		return list;
 	}
 	
 }

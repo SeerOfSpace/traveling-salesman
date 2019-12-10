@@ -18,8 +18,15 @@ public class Tester {
 				new Graph<>(new MyNodeFactory<>(), new MyEdgeFactory<>());
 		
 		loadFile(new File("src\\com\\seerofspace\\tsp\\core\\test.txt"), graph);
-		printGraph(graph);
+		//printGraph(graph);
 		List<Node<String, Integer>> route = NearestNeighbor.nearestNeighbor(graph, graph.getNode("Rockville"));
+		route.forEach(e -> {
+			System.out.println(e.getId());
+		});
+		System.out.println();
+		System.out.println(getRouteLength(route));
+		System.out.println();
+		route = BranchAndBound.branchAndBound(graph, graph.getNode("Rockville"));
 		route.forEach(e -> {
 			System.out.println(e.getId());
 		});

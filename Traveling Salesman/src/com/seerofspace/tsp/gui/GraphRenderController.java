@@ -284,7 +284,7 @@ public class GraphRenderController {
 		String s = "";
 		while(num >= 0) {
 			s += (char) (num % 26 + 'A');
-			num -= 25;
+			num -= 26;
 		}
 		return s;
 	}

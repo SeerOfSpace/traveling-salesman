@@ -40,3 +40,4 @@ New York City, Philadelphia, 97, true
 New York City, Pittsburgh, 370, true
 New York City, Baltimore, 188, true
 New York City, Cleveland, 462, true
+A, B, 1, false
