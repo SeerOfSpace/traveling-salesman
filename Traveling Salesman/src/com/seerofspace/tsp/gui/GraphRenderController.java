@@ -30,8 +30,6 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
-import javafx.scene.effect.BlurType;
-import javafx.scene.effect.InnerShadow;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -120,16 +118,18 @@ public class GraphRenderController {
 		generateButton.setOnAction(e -> {
 			animationThread.interrupt();
 			clearStatistics();
+			pauseCheckBox.setSelected(false);
 			generateRandomButtonFunc();
 		});
 		
 		generateCompleteButton.setOnAction(e -> {
 			animationThread.interrupt();
 			clearStatistics();
+			pauseCheckBox.setSelected(false);
 			generateRandomCompleteButtonFunc();
 		});
 		
-		pauseCheckBox.setOnAction(e -> {
+		pauseCheckBox.selectedProperty().addListener(e -> {
 			if(pauseCheckBox.isSelected()) {
 				wt.pause();
 			} else {
@@ -149,8 +149,8 @@ public class GraphRenderController {
 			String s = 
 					"Click individual nodes to move them around" + "\n" + 
 					"Click on an empty space to attract the nodes to the spot" + "\n" + 
-					"Control click on individual nodes to mark them as the starting node" + "\n" +
-					"Control click the node again to deselect them" + "\n" +
+					"Control or right click on individual nodes to mark them as the starting node" + "\n" +
+					"Control or right click the node again to deselect them" + "\n" +
 					"Use the pause button to move the nodes around without physics" + "\n" +
 					"The side bar is resizable if it is too small" + "\n" +
 					"In the side bar, additional statistics like total route length will show up when using either algorithm";
@@ -229,7 +229,7 @@ public class GraphRenderController {
 	}
 	
 	private synchronized void generateRandomCompleteButtonFunc() {
-		int maxWeight = 100;
+		int maxWeight = 200;
 		int maxNodes = 10;
 		graph = new Graph<>(new CircleNodeFactory(0, 0, 10, Color.BLACK), new LineEdgeFactory(2, Color.BLACK));
 		Random r = new Random();

@@ -71,7 +71,7 @@ public class WorkThread {
 			noWait = true;
 			CircleNode circle = getCircleUnderMouse(e);
 			if(circle != null) {
-				if(e.isControlDown()) {
+				if(e.isControlDown() || e.isSecondaryButtonDown()) {
 					noWait = false;
 					if(startingNode == circle) {
 						startingNode = null;
@@ -227,6 +227,9 @@ public class WorkThread {
 	}
 	
 	private CircleNode getCircleUnderMouse(MouseEvent e) {
+		if(graph == null) {
+			return null;
+		}
 		double x = e.getX();
 		double y = e.getY();
 		for(CircleNode circle : graph.getCollection()) {

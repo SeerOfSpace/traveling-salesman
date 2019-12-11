@@ -8,6 +8,7 @@
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
@@ -41,8 +42,14 @@
                         <Button fx:id="loadButton" mnemonicParsing="false" text="Load File" />
                         <Button fx:id="generateButton" mnemonicParsing="false" text="Generate Random" />
                         <Button fx:id="generateCompleteButton" mnemonicParsing="false" text="Generate Random Complete" />
-                        <Button fx:id="nearestNeighborButton" mnemonicParsing="false" text="Nearest Neighbor" />
-                        <Button fx:id="branchAndBoundButton" mnemonicParsing="false" text="Branch And Bound" />
+                        <Button fx:id="nearestNeighborButton" mnemonicParsing="false" text="Nearest Neighbor">
+                           <tooltip>
+                              <Tooltip text="Ctrl or right click nodes to mark the starting node" wrapText="true" />
+                           </tooltip></Button>
+                        <Button fx:id="branchAndBoundButton" mnemonicParsing="false" text="Branch And Bound">
+                           <tooltip>
+                              <Tooltip text="Ctrl or right click nodes to mark the starting node" wrapText="true" />
+                           </tooltip></Button>
                         <CheckBox fx:id="pauseCheckBox" mnemonicParsing="false" text="Pause" />
                      </children>
                      <padding>
