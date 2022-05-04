@@ -207,7 +207,7 @@ public class GraphRenderController {
 				graph.addEdgeUndirected(mapToName(i), mapToName(i - 1), r.ints(1, 1, maxWeight).findFirst().getAsInt());
 			}
 			int numEdges = r.ints(1, 1, num).findFirst().getAsInt();
-			int[] edges = r.ints(numEdges, 1, num).toArray();;
+			int[] edges = r.ints(numEdges, 1, num).toArray();
 			for(int j = 0; j < numEdges; j++) {
 				if(i == edges[j]) {
 					continue;
